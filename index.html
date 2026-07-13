@@ -845,12 +845,22 @@
         }
 
         function resetAppMemory() {
-            if(confirm("Completely reset local dashboard storage profiles?")) {
-                localStorage.clear();
-                location.reload();
-            }
-        }
-
+    if(confirm("Completely reset local dashboard storage profiles?")) {
+        // Clear variables first
+        localStorage.removeItem('ib_user_handle');
+        localStorage.removeItem('ib_user_goal');
+        localStorage.removeItem('ib_registered');
+        localStorage.removeItem('ib_cached_metrics');
+        
+        // Final broad wipe
+        localStorage.clear();
+        
+        // Small delay to ensure disk write completes before forcing the reload
+        setTimeout(() => {
+            window.location.href = window.location.pathname + '?clear=' + Date.now();
+        }, 300);
+    }
+}
         function triggerHapticFeedback() {
             if (tg.HapticFeedback) {
                 tg.HapticFeedback.impactOccurred('medium');
