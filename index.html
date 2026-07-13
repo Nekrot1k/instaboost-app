@@ -703,7 +703,6 @@
 
     <!-- --- CONTROL LOGIC SCRIPT --- -->
     <script>
-        // Catch early syntax/execution crashes instantly
         window.addEventListener('error', function(e) {
             var box = document.getElementById('emergency-crash-log');
             if(box) {
@@ -712,7 +711,6 @@
             }
         });
 
-        // Safe Webview Storage wrapper to handle restrictive environments gracefully
         var safeStorage = {
             getItem: function(key) {
                 try { return localStorage.getItem(key); } catch(e) { return null; }
@@ -769,10 +767,10 @@
                     
                     if (!appState.liveMetrics) {
                         appState.liveMetrics = {
-                            followers: 162500000,
-                            likes: 2400000000,
-                            videos: 392,
-                            bio: "Premium tracking initialized.",
+                            followers: 0,
+                            likes: 0,
+                            videos: 0,
+                            bio: "Initializing tracking pipeline...",
                             nickname: savedHandle,
                             avatar: ""
                         };
@@ -806,80 +804,80 @@
         }
 
         function fetchLiveTikTokData(username, showOverlay) {
-    if(showOverlay === undefined) showOverlay = false;
-    var overlay = document.getElementById('processing-screen');
-    var statusTitle = document.getElementById('sync-status-title');
-    var statusSub = document.getElementById('sync-status-sub');
-    
-    if (showOverlay && overlay) {
-        if(statusTitle) statusTitle.innerText = "Connecting App Stream...";
-        if(statusSub) statusSub.innerText = "Pinging public metric nodes for @" + username;
-        overlay.style.display = 'flex';
-    }
+            return new Promise(function(resolve, reject) {
+                if(showOverlay === undefined) showOverlay = false;
+                var overlay = document.getElementById('processing-screen');
+                var statusTitle = document.getElementById('sync-status-title');
+                var statusSub = document.getElementById('sync-status-sub');
+                
+                if (showOverlay && overlay) {
+                    if(statusTitle) statusTitle.innerText = "Connecting App Stream...";
+                    if(statusSub) statusSub.innerText = "Pinging public counter nodes for @" + username;
+                    overlay.style.display = 'flex';
+                }
 
-    // Switched to an alternative open JSON endpoint that bypasses standard CORS restrictions
-    var apiUrl = 'https://api.tokcount.com/com/user/info/' + encodeURIComponent(username);
-    
-    fetch(apiUrl)
-        .then(function(res) { 
-            if(!res.ok) throw new Error("Network status invalid.");
-            return res.json(); 
-        })
-        .then(function(payload) {
-            // Check if the alternative API returned valid data structure
-            if (!payload || !payload.data || !payload.data.stats) {
-                throw new Error("Missing structural payload setup.");
-            }
+                var apiUrl = 'https://countik.com/api/userinfo/' + encodeURIComponent(username);
+                
+                fetch(apiUrl)
+                    .then(function(res) { 
+                        if(!res.ok) throw new Error("CORS or network error on primary node.");
+                        return res.json(); 
+                    })
+                    .then(function(payload) {
+                        if (!payload || payload.status === "error" || !payload.followerCount) {
+                            throw new Error("Invalid payload structure returned.");
+                        }
 
-            var node = payload.data;
-            appState.liveMetrics = {
-                followers: parseInt(node.stats.followers) || 0,
-                likes: parseInt(node.stats.heart) || parseInt(node.stats.likes) || 0,
-                videos: parseInt(node.stats.videos) || 0,
-                bio: node.user.signature || "Active creator workspace synced.",
-                nickname: node.user.nickname || username,
-                avatar: node.user.avatar || ""
-            };
-
-            safeStorage.setItem('ib_cached_metrics', JSON.stringify(appState.liveMetrics));
-            bindDataToUI();
-            if (showOverlay && overlay) { overlay.style.display = 'none'; }
-        })
-        .catch(function(err) {
-            console.warn("Primary API restricted. Trying secondary proxy route...", err);
-            
-            // SECONDARY BACKUP ROUTE: If TokCount is down, retry TikWM via a cleaner text extraction string
-            var targetUrl = 'https://www.tikwm.com/api/user/info?unique_id=' + encodeURIComponent(username);
-            var backupApi = 'https://api.allorigins.win/get?url=' + encodeURIComponent(targetUrl) + '&nocache=' + Date.now();
-            
-            fetch(backupApi)
-                .then(function(r) { return r.json(); })
-                .then(function(wrapper) {
-                    var dataJson = typeof wrapper.contents === 'string' ? JSON.parse(wrapper.contents) : wrapper.contents;
-                    if(dataJson && dataJson.data && dataJson.data.stats) {
-                        var n = dataJson.data;
                         appState.liveMetrics = {
-                            followers: parseInt(n.stats.followerCount) || 0,
-                            likes: parseInt(n.stats.heartCount) || 0,
-                            videos: parseInt(n.stats.videoCount) || 0,
-                            bio: n.user.signature || "Live track confirmed.",
-                            nickname: n.user.nickname || username,
-                            avatar: n.user.avatarThumb || ""
+                            followers: parseInt(payload.followerCount) || 0,
+                            likes: parseInt(payload.heartCount) || parseInt(payload.likesCount) || 0,
+                            videos: parseInt(payload.videoCount) || 0,
+                            bio: payload.signature || "Live track confirmed.",
+                            nickname: payload.nickname || username,
+                            avatar: payload.avatar || ""
                         };
+
                         safeStorage.setItem('ib_cached_metrics', JSON.stringify(appState.liveMetrics));
                         bindDataToUI();
-                    } else {
-                        setupLocalFallbackMetrics(username); // Only run simulation if absolutely everything fails
-                    }
-                })
-                .catch(function() {
-                    setupLocalFallbackMetrics(username);
-                })
-                .finally(function() {
-                    if (showOverlay && overlay) { overlay.style.display = 'none'; }
-                });
-        });
-}
+                        if (showOverlay && overlay) { overlay.style.display = 'none'; }
+                        resolve(appState.liveMetrics);
+                    })
+                    .catch(function(err) {
+                        console.warn("Primary API isolated. Testing secondary proxy bridge...", err);
+                        
+                        var backupUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://countik.com/api/userinfo/' + username) + '&nocache=' + Date.now();
+                        
+                        fetch(backupUrl)
+                            .then(function(r) { return r.json(); })
+                            .then(function(wrapper) {
+                                var dataJson = typeof wrapper.contents === 'string' ? JSON.parse(wrapper.contents) : wrapper.contents;
+                                if(dataJson && dataJson.followerCount) {
+                                    appState.liveMetrics = {
+                                        followers: parseInt(dataJson.followerCount) || 0,
+                                        likes: parseInt(dataJson.heartCount) || 0,
+                                        videos: parseInt(dataJson.videoCount) || 0,
+                                        bio: dataJson.signature || "Live track confirmed via proxy bridge.",
+                                        nickname: dataJson.nickname || username,
+                                        avatar: dataJson.avatar || ""
+                                    };
+                                    safeStorage.setItem('ib_cached_metrics', JSON.stringify(appState.liveMetrics));
+                                    bindDataToUI();
+                                    resolve(appState.liveMetrics);
+                                } else {
+                                    setupLocalFallbackMetrics(username);
+                                    resolve(appState.liveMetrics);
+                                }
+                            })
+                            .catch(function() {
+                                setupLocalFallbackMetrics(username);
+                                resolve(appState.liveMetrics);
+                            })
+                            .finally(function() {
+                                if (showOverlay && overlay) { overlay.style.display = 'none'; }
+                            });
+                    });
+            });
+        }
 
         function setupLocalFallbackMetrics(username) {
             var baseFollowers = Math.floor(Math.random() * 80000) + 15000;
@@ -897,7 +895,7 @@
                 followers: baseFollowers,
                 likes: baseLikes,
                 videos: baseVideos,
-                bio: "⚡ Sandbox Engine Active. Production API origin isolated or rate-limited.",
+                bio: "⚠️ Sandbox Engine Active. Production API origin isolated or rate-limited.",
                 nickname: username,
                 avatar: ""
             };
@@ -919,26 +917,23 @@
             appState.goal = selectedGoalCard ? selectedGoalCard.getAttribute('data-goal') : 'Grow Followers';
             appState.handle = handleInput;
 
-            var stepHandle = document.getElementById('step-handle');
-            if(stepHandle) stepHandle.classList.remove('active-step');
-            
             var overlay = document.getElementById('processing-screen');
             if(overlay) overlay.style.display = 'flex';
             
-            setTimeout(function() {
-                fetchLiveTikTokData(handleInput, false);
-                
-                safeStorage.setItem('ib_user_handle', appState.handle);
-                safeStorage.setItem('ib_user_goal', appState.goal);
-                safeStorage.setItem('ib_registered', 'true');
-                appState.isRegistered = true;
+            fetchLiveTikTokData(handleInput, false)
+                .then(function() {
+                    safeStorage.setItem('ib_user_handle', appState.handle);
+                    safeStorage.setItem('ib_user_goal', appState.goal);
+                    safeStorage.setItem('ib_registered', 'true');
+                    appState.isRegistered = true;
 
-                bindDataToUI();
-
-                if(overlay) overlay.style.display = 'none';
-                var stepSuccess = document.getElementById('step-success');
-                if(stepSuccess) stepSuccess.classList.add('active-step');
-            }, 400);
+                    if(overlay) overlay.style.display = 'none';
+                    var stepHandle = document.getElementById('step-handle');
+                    if(stepHandle) stepHandle.classList.remove('active-step');
+                    
+                    var stepSuccess = document.getElementById('step-success');
+                    if(stepSuccess) stepSuccess.classList.add('active-step');
+                });
         }
 
         function bindDataToUI() {
@@ -966,7 +961,7 @@
                     var pairBox = document.getElementById('trend-pair-avatar');
                     if(pairBox) pairBox.innerHTML = '<img src="' + metrics.avatar + '" style="width:100%; height:100%; object-fit:cover; border-radius:6px;" />';
                 }
-                if(document.getElementById('stats-signature-desc')) document.getElementById('stats-signature-desc').innerText = "Active tracking signature confirmed. Account contains exactly " + Number(metrics.followers).toLocaleString() + " metrics followers and " + Number(metrics.likes).toLocaleString() + " raw interaction likes across " + Number(metrics.videos).toLocaleString() + " uploads.";
+                if(document.getElementById('stats-signature-desc')) document.getElementById('stats-signature-desc').innerText = "Active tracking signature confirmed. Account contains exactly " + Number(metrics.followers).toLocaleString() + " followers and " + Number(metrics.likes).toLocaleString() + " raw interaction likes across " + Number(metrics.videos).toLocaleString() + " uploads.";
 
                 var tier = "Tier 4";
                 var reachStr = "50K";
