@@ -855,17 +855,6 @@
             });
     });
 }
-// function setupLocalFallbackMetrics(username, errMsg) {
-    // 100% REMOVED Math.random(). Fake data is now impossible.
-    // appState.liveMetrics = {
-        // followers: 0,
-        // likes: 0,
-        // videos: 0,
-        // bio: "❌ Profile Sync Failed. Account might be too new for the Countik database, or API is restricted.",
-        //nickname: "Not Found",
-        //avatar: ""
-    //};
-
     safeStorage.setItem('ib_cached_metrics', JSON.stringify(appState.liveMetrics));
     bindDataToUI();
 }
