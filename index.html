@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Instaboost - Premium Analytics Workspace</title>
+    <!-- Telegram Web App Script Link -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        /* --- DESIGN SYSTEM STYLING TOKENS --- */
+        :root {
+            --bg-dark: #070708;
+            --bg-card: #0e0f12;
+            --bg-input: #14161b;
+            --accent-orange: #ff7a00;
+            --accent-gradient: linear-gradient(135deg, #ff7a00 0%, #ff4d00 100%);
+            --text-main: #ffffff;
+            --text-muted: #7e8492;
+            --text-gold: #e2b08a;
+            --border-color: #1a1d24;
+            --glow-color: rgba(255, 122, 0, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            padding-bottom: 75px;
+        }
+
+        /* --- STICKY APP NAVBAR CORNER HEADER --- */
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background-color: var(--bg-dark);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 900;
+        }
+
+        .brand-logo {
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            background: linear-gradient(180deg, #ffffff 0%, var(--text-gold) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            color: var(--text-main);
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        /* --- APPLICATION LAYOUT FRAMES --- */
+        .app-view {
+            display: none;
+            padding: 20px 16px;
+            animation: viewFadeIn 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .app-view.active-view {
+            display: block;
+        }
+
+        @keyframes viewFadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            font-size: 26px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            letter-spacing: -0.5px;
+        }
+
+        .view-subtitle {
+            color: var(--text-muted);
+            font-size: 13px;
+            margin-bottom: 24px;
+            line-height: 1.4;
+        }
+
+        /* --- PREMIUM CARDS & METRIC PATTERNS --- */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .metric-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            position: relative;
+        }
+
+        .metric-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-muted);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        .metric-card .label {
+            color: var(--text-muted);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .metric-card .value {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .dashboard-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        /* --- COMPACT FOOTER TAB NAV BAR --- */
+        .nav-tab-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100vw;
+            height: 65px;
+            background-color: #090a0d;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 950;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .tab-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 10px;
+            font-weight: 500;
+            gap: 4px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            width: 25%;
+            height: 100%;
+        }
+
+        .tab-item svg {
+            width: 20px;
+            height: 20px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            transition: color 0.2s;
+        }
+
+        .tab-item.active {
+            color: var(--accent-orange);
+        }
+
+        /* --- FORM ELEMENTS & BUTTONS --- */
+        .btn-orange {
+            background: var(--accent-gradient);
+            color: #000000;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 700;
+            width: 100%;
+            cursor: pointer;
+            box-shadow: 0 4px 15px var(--glow-color);
+            transition: opacity 0.2s;
+        }
+
+        .btn-orange:hover { opacity: 0.9; }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 14px 24px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        /* --- MULTI-STEP ONBOARDING ENGINE LAYERS --- */
+        .onboarding-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: var(--bg-dark);
+            z-index: 1000;
+            padding: 24px 20px;
+            display: none;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .onboarding-screen.active-step {
+            display: flex;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-gold);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 3px;
+            background-color: var(--border-color);
+            border-radius: 2px;
+            margin-bottom: 40px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: var(--accent-orange);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .onboarding-center {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .onboarding-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            line-height: 1.2;
+        }
+
+        .onboarding-subtitle {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 32px;
+            line-height: 1.5;
+        }
+
+        /* --- CHOICE LISTS & INPUT FIELDS --- */
+        .selectable-card-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+            margin-bottom: 24px;
+        }
+
+        .selectable-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            cursor: pointer;
+            text-align: left;
+            transition: border-color 0.2s, background-color 0.2s;
+        }
+
+        .selectable-card .icon-wrap {
+            background-color: var(--bg-input);
+            padding: 10px;
+            border-radius: 8px;
+            color: var(--text-gold);
+            font-size: 16px;
+        }
+
+        .selectable-card .title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .selectable-card .desc {
+            color: var(--text-muted);
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .selectable-card.selected {
+            border-color: var(--accent-orange);
+            background-color: rgba(255, 122, 0, 0.02);
+        }
+
+        .input-container {
+            position: relative;
+            width: 100%;
+            margin-bottom: 24px;
+        }
+
+        .input-field {
+            width: 100%;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 18px 20px 18px 48px;
+            border-radius: 12px;
+            color: #ffffff;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .input-prefix {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-gold);
+            font-family: serif;
+            font-style: italic;
+            font-size: 20px;
+        }
+
+        /* --- PROCESSING MODAL FRAME --- */
+        .processing-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(7, 7, 8, 0.96);
+            z-index: 2000;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 24px;
+        }
+
+        .processing-circle {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--accent-orange);
+            animation: spin 1s linear infinite;
+            margin-bottom: 24px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* --- PROFILE HERO UNIT --- */
+        .profile-hero {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .avatar-frame {
+            width: 84px;
+            height: 84px;
+            border-radius: 50%;
+            border: 2px solid var(--accent-orange);
+            padding: 3px;
+            margin-bottom: 12px;
+            overflow: hidden;
+            background: var(--bg-input);
+        }
+        .avatar-frame img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- --- MULTI-STEP ONBOARDING SYSTEM --- -->
+    <div id="step-welcome" class="onboarding-screen">
+        <div style="text-align:center; padding-top: 20px;"><div class="brand-logo">Instaboost</div></div>
+        <div class="onboarding-center">
+            <div style="width: 110px; height: 110px; border-radius: 50%; background: var(--bg-card); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; margin-bottom: 40px; box-shadow: 0 0 30px var(--glow-color);">
+                <span style="color: var(--accent-orange); font-size: 42px;">⚡</span>
+            </div>
+            <h1 class="onboarding-title">Welcome to <span style="color: var(--accent-orange);">Instaboost</span></h1>
+            <p class="onboarding-subtitle">Connect your live public creator profile tracking suite instantly.</p>
+        </div>
+        <button class="btn-orange" onclick="goToStep('welcome', 'goals')">Get Started</button>
+    </div>
+
+    <div id="step-goals" class="onboarding-screen">
+        <div>
+            <div class="progress-header"><span>Step 1 of 3</span><span>33% Complete</span></div>
+            <div class="progress-bar"><div class="progress-fill" style="width: 33%;"></div></div>
+            <h1 style="font-size: 24px; margin-bottom: 8px;">What is your primary goal?</h1>
+            <p style="color:var(--text-muted); font-size:13px; margin-bottom:24px;">Tailor your performance trajectory filters.</p>
+            
+            <div class="selectable-card-list">
+                <div class="selectable-card selected" data-goal="Grow Followers" onclick="selectCard(this)">
+                    <div class="icon-wrap">👤</div>
+                    <div>
+                        <div class="title">Grow Followers</div>
+                        <div class="desc">Expand your audience pool with live velocity tracking systems.</div>
+                    </div>
+                </div>
+                <div class="selectable-card" data-goal="Boost Engagement" onclick="selectCard(this)">
+                    <div class="icon-wrap">♥</div>
+                    <div>
+                        <div class="title">Boost Engagement</div>
+                        <div class="desc">Maximize user response frequency across published videos.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div style="display:flex; gap:12px; width:100%;">
+            <button class="btn-outline" style="width:35%;" onclick="goToStep('goals', 'welcome')">Back</button>
+            <button class="btn-orange" style="width:65%;" onclick="goToStep('goals', 'handle')">Continue</button>
+        </div>
+    </div>
+
+    <div id="step-handle" class="onboarding-screen">
+        <div>
+            <div class="progress-header"><span>Step 2 of 3</span><span>66% Complete</span></div>
+            <div class="progress-bar"><div class="progress-fill" style="width: 66%;"></div></div>
+            <h1 style="font-size: 24px; margin-bottom: 8px; text-align:center; margin-top:20px;">Your <span style="color: var(--accent-orange);">TikTok handle</span></h1>
+            <p style="color:var(--text-muted); font-size:13px; text-align:center; margin-bottom:40px;">Enter an active username to pull factual network data profiles.</p>
+            
+            <div class="input-container">
+                <span class="input-prefix">@</span>
+                <input type="text" class="input-field" id="user-handle-input" placeholder="mrbeast">
+            </div>
+        </div>
+        <button class="btn-orange" onclick="processLiveSyncData()">Sync TikTok Profile</button>
+    </div>
+
+    <!-- LIVE DATA SYNC PROCESSING MODAL OVERLAY -->
+    <div id="processing-screen" class="processing-overlay">
+        <div class="processing-circle"></div>
+        <h2 style="font-size:22px; font-weight:700; margin-bottom:8px;" id="sync-status-title">Querying Metrics...</h2>
+        <p style="color:var(--text-gold); font-size:11px; letter-spacing:1px; text-transform:uppercase;" id="sync-status-sub">Establishing pipeline link</p>
+    </div>
+
+    <div id="step-success" class="onboarding-screen">
+        <div style="text-align:center; padding-top: 20px;"><div class="brand-logo">Instaboost</div></div>
+        <div class="onboarding-center">
+            <h1 class="onboarding-title" style="font-size:26px;" id="success-headline">Profile Synchronized</h1>
+            <p class="onboarding-subtitle" style="font-size:13px; padding:0 10px;" id="success-body">Verified live structural data tracks captured from data streams.</p>
+        </div>
+        <button class="btn-orange" onclick="launchMainDashboardWorkspace()">Enter Dashboard</button>
+    </div>
+
+
+    <!-- --- MAIN APPLICATION INTERFACE --- -->
+    <div id="main-application-suite" style="display: none;">
+        
+        <header class="app-header">
+            <div class="brand-logo">⚡ Instaboost</div>
+            <div class="header-actions">
+                <button class="icon-btn" onclick="fetchLiveTikTokData(appState.handle, true)">🔄</button>
+            </div>
+        </header>
+
+        <!-- SECTION 1: Home Dashboard View -->
+        <div id="view-home" class="app-view active-view">
+            <h1>Performance Deep Dive</h1>
+            <p class="view-subtitle">Analyzing live video metrics for <span id="dash-handle-title" style="color:var(--accent-orange); font-weight:600;">@user</span></p>
+            
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-meta"><span>👥</span><span style="color:var(--accent-orange);">Live</span></div>
+                    <div class="label">Followers</div>
+                    <div class="value" id="val-followers">0</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-meta"><span>👁</span><span style="color:var(--accent-orange);">Live</span></div>
+                    <div class="label">Total Likes</div>
+                    <div class="value" id="val-likes">0</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-meta"><span>📺</span><span style="color:var(--text-gold);">Videos</span></div>
+                    <div class="label">Total Posts</div>
+                    <div class="value" id="val-videos">0</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-meta"><span>⏱</span><span>Ratio</span></div>
+                    <div class="label">Likes Per Follower</div>
+                    <div class="value" id="val-engagement">0.0x</div>
+                </div>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-title">Profile Bio Record</div>
+                <div style="color:var(--text-muted); font-size:13px; margin-top:6px; line-height:1.4;" id="profile-bio-text">No data synced.</div>
+            </div>
+        </div>
+
+        <!-- SECTION 2: Stats Framework View -->
+        <div id="view-stats" class="app-view">
+            <h1>Analytics Workspace</h1>
+            <p class="view-subtitle">Factual profile signature configuration evaluation.</p>
+            <div class="dashboard-card">
+                <div class="card-title">Verification Logs</div>
+                <p style="color:var(--text-muted); font-size:13px; line-height: 1.5; margin-top: 8px;" id="stats-signature-desc">
+                    Metrics streaming correctly under optimized tracking parameters.
+                </p>
+            </div>
+        </div>
+
+        <!-- SECTION 3: Predictive Trends Forecasting View -->
+        <div id="view-trends" class="app-view">
+            <h1>Viral Velocity</h1>
+            <p class="view-subtitle">Predictive trajectory metrics matching your current content profile.</p>
+            <div class="dashboard-card">
+                <div class="card-title">Target Matrix Optimization</div>
+                <p style="color:var(--text-muted); font-size:13px; margin-top:8px;">Live creator data ingestion routes are fully established. Tap the top refresh node anytime to ping the global endpoint cluster for metric adjustments.</p>
+            </div>
+        </div>
+
+        <!-- SECTION 4: Profile Asset Management View -->
+        <div id="view-profile" class="app-view">
+            <div class="profile-hero">
+                <div class="avatar-frame" id="profile-avatar-box">
+                    <div style="width:100%; height:100%; background:var(--bg-input); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:28px;">👤</div>
+                </div>
+                <h2 id="profile-display-name" style="font-size:22px; font-weight:700; margin-bottom:2px;">Creator Profile</h2>
+                <p id="profile-display-handle" style="color:var(--text-muted); font-size:13px; margin-bottom:12px;">@username</p>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-title" style="margin-bottom:12px;">Session Metrics Storage</div>
+                <div style="font-size:13px; color:var(--text-muted); display:flex; flex-direction:column; gap:8px;">
+                    <div>🎯 Workspace Goal: <span id="meta-goal" style="color:var(--text-gold);">Not Set</span></div>
+                    <div>🔑 Connection Link: <span style="color:#00ff88;">Factual Dynamic API Delivery</span></div>
+                </div>
+            </div>
+            
+            <button class="btn-outline" onclick="resetAppMemory()" style="border-color:#ff3b30; color:#ff3b30;">Clear Storage / Reset App</button>
+        </div>
+
+        <!-- FIXED BOTTOM FOOTER NAVIGATION TAB BAR -->
+        <nav class="nav-tab-bar">
+            <button class="tab-item active" onclick="switchTab('home', this)">
+                <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                <span>Home</span>
+            </button>
+            <button class="tab-item" onclick="switchTab('stats', this)">
+                <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                <span>Stats</span>
+            </button>
+            <button class="tab-item" onclick="switchTab('trends', this)">
+                <svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                <span>Trends</span>
+            </button>
+            <button class="tab-item" onclick="switchTab('profile', this)">
+                <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <span>Profile</span>
+            </button>
+        </nav>
+
+    </div>
+
+    <!-- --- APP ROUTING ENGINE, LIFE-CYCLE PERSISTENCE AND LIVE DATA FETCH SYNC --- -->
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        if (tg.ready) { tg.ready(); }
+
+        let appState = {
+            handle: '',
+            goal: '',
+            isRegistered: false,
+            liveMetrics: null
+        };
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadApplicationState();
+        });
+
+        function loadApplicationState() {
+            const savedHandle = localStorage.getItem('ib_user_handle');
+            const savedGoal = localStorage.getItem('ib_user_goal');
+            const isRegistered = localStorage.getItem('ib_registered') === 'true';
+
+            if (isRegistered && savedHandle) {
+                appState.handle = savedHandle;
+                appState.goal = savedGoal || 'Grow Followers';
+                appState.isRegistered = true;
+                
+                const cachedMetrics = localStorage.getItem('ib_cached_metrics');
+                if(cachedMetrics) {
+                    appState.liveMetrics = JSON.parse(cachedMetrics);
+                }
+
+                bindDataToUI();
+                document.getElementById('main-application-suite').style.display = 'block';
+                fetchLiveTikTokData(savedHandle, false);
+            } else {
+                document.getElementById('step-welcome').classList.add('active-step');
+            }
+        }
+
+        function goToStep(current, next) {
+            triggerHapticFeedback();
+            document.getElementById(`step-${current}`).classList.remove('active-step');
+            document.getElementById(`step-${next}`).classList.add('active-step');
+        }
+
+        function selectCard(element) {
+            triggerHapticFeedback();
+            document.querySelectorAll('.selectable-card').forEach(card => card.classList.remove('selected'));
+            element.classList.add('selected');
+        }
+
+        // UPDATED SECURE PUBLIC DATA AGGREGATION LOOKUP ENGINE
+        async function fetchLiveTikTokData(username, showOverlay = false) {
+            const overlay = document.getElementById('processing-screen');
+            const statusTitle = document.getElementById('sync-status-title');
+            const statusSub = document.getElementById('sync-status-sub');
+            
+            if (showOverlay) {
+                statusTitle.innerText = "Connecting App Stream...";
+                statusSub.innerText = `Pinging public metric nodes for @${username}`;
+                overlay.style.display = 'flex';
+            }
+
+            try {
+                // Utilizing a high-availability open endpoint matrix designed for profile metrics distribution
+                const apiUrl = `https://corsproxy.io/?${encodeURIComponent('https://api.tikwm.com/api/user/info?unique_id=' + username)}`;
+                const response = await fetch(apiUrl);
+                
+                if (!response.ok) throw new Error("Endpoint verification failure.");
+                
+                const dataJson = await response.parse ? await response.parse() : await response.json();
+                
+                // Strict validation verification checks on response structure
+                if (!dataJson || dataJson.code !== 0 || !dataJson.data || !dataJson.data.stats) {
+                    throw new Error("Target creator handles dropped empty values. User might not exist.");
+                }
+
+                const node = dataJson.data;
+                const liveStats = {
+                    followers: parseInt(node.stats.followerCount) || 0,
+                    likes: parseInt(node.stats.heartCount) || 0,
+                    videos: parseInt(node.stats.videoCount) || 0,
+                    bio: node.user.signature || "No active creator bio recorded.",
+                    nickname: node.user.nickname || username,
+                    avatar: node.user.avatarThumb || ""
+                };
+
+                appState.liveMetrics = liveStats;
+                localStorage.setItem('ib_cached_metrics', JSON.stringify(liveStats));
+                
+                bindDataToUI();
+                
+                if (showOverlay) {
+                    document.getElementById('success-headline').innerText = "Live Aggregation Complete";
+                    document.getElementById('success-body').innerText = `Successfully loaded direct creator telemetry maps for @${username}.`;
+                    overlay.style.display = 'none';
+                }
+                return true;
+
+            } catch (err) {
+                console.error("API Fetch Fault Node:", err);
+                if (showOverlay) {
+                    overlay.style.display = 'none';
+                    alert(`Sync Error: Could not connect to public metrics for "@${username}". Ensure the account exists and is not entirely hidden/private.`);
+                }
+                return false;
+            }
+        }
+
+        async function processLiveSyncData() {
+            triggerHapticFeedback();
+            const handleInput = document.getElementById('user-handle-input').value.trim().replace('@', '');
+            if (!handleInput) {
+                alert('Please enter an active TikTok handle.');
+                return;
+            }
+
+            const selectedGoalCard = document.querySelector('.selectable-card.selected');
+            appState.goal = selectedGoalCard ? selectedGoalCard.getAttribute('data-goal') : 'Grow Followers';
+            appState.handle = handleInput;
+
+            // Direct trigger verification pipeline
+            const overlay = document.getElementById('processing-screen');
+            overlay.style.display = 'flex';
+            
+            const success = await fetchLiveTikTokData(handleInput, false);
+            overlay.style.display = 'none';
+
+            if (success) {
+                localStorage.setItem('ib_user_handle', appState.handle);
+                localStorage.setItem('ib_user_goal', appState.goal);
+                localStorage.setItem('ib_registered', 'true');
+                appState.isRegistered = true;
+
+                document.getElementById('step-handle').classList.remove('active-step');
+                document.getElementById('step-success').classList.add('active-step');
+            }
+        }
+
+        function bindDataToUI() {
+            const displayHandle = `@${appState.handle.toLowerCase()}`;
+            document.getElementById('dash-handle-title').innerText = displayHandle;
+            document.getElementById('profile-display-handle').innerText = displayHandle;
+            document.getElementById('meta-goal').innerText = appState.goal;
+
+            if (appState.liveMetrics) {
+                const metrics = appState.liveMetrics;
+                document.getElementById('val-followers').innerText = metrics.followers.toLocaleString();
+                document.getElementById('val-likes').innerText = metrics.likes.toLocaleString();
+                document.getElementById('val-videos').innerText = metrics.videos.toLocaleString();
+                
+                const ratio = metrics.followers > 0 ? (metrics.likes / metrics.followers).toFixed(1) : "0.0";
+                document.getElementById('val-engagement').innerText = `${ratio}x`;
+                document.getElementById('profile-bio-text').innerText = metrics.bio;
+                document.getElementById('profile-display-name').innerText = metrics.nickname;
+                
+                if (metrics.avatar) {
+                    document.getElementById('profile-avatar-box').innerHTML = `<img src="${metrics.avatar}" alt="Avatar">`;
+                }
+                document.getElementById('stats-signature-desc').innerText = `Active tracking signature confirmed. Account contains exactly ${metrics.followers.toLocaleString()} metrics followers and ${metrics.likes.toLocaleString()} raw interaction likes across ${metrics.videos.toLocaleString()} uploads.`;
+            }
+        }
+
+        function launchMainDashboardWorkspace() {
+            triggerHapticFeedback();
+            document.getElementById('step-success').classList.remove('active-step');
+            document.getElementById('main-application-suite').style.display = 'block';
+        }
+
+        function switchTab(tabId, tabBtnElement) {
+            triggerHapticFeedback();
+            document.querySelectorAll('.app-view').forEach(view => view.classList.remove('active-view'));
+            document.querySelectorAll('.tab-item').forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(`view-${tabId}`).classList.add('active-view');
+            tabBtnElement.classList.add('active');
+        }
+
+        function resetAppMemory() {
+            if(confirm("Completely reset local dashboard storage profiles?")) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
+        function triggerHapticFeedback() {
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('medium');
+            }
+        }
+    </script>
+</body>
+</html>
