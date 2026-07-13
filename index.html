@@ -570,32 +570,81 @@
         <!-- SECTION 3: Predictive Trends Forecasting View -->
         <div id="view-trends" class="app-view">
             <h1>Viral Velocity</h1>
-            <p class="view-subtitle">Predictive trajectory metrics matching your current content profile.</p>
-            <div class="dashboard-card">
-                <div class="card-title">Target Matrix Optimization</div>
-                <p style="color:var(--text-muted); font-size:13px; margin-top:8px;">Live creator data ingestion routes are fully established. Tap the top refresh node anytime to ping the global endpoint cluster for metric adjustments.</p>
-            </div>
-        </div>
-
-        <!-- SECTION 4: Profile Asset Management View -->
-        <div id="view-profile" class="app-view">
-            <div class="profile-hero">
-                <div class="avatar-frame" id="profile-avatar-box">
-                    <div style="width:100%; height:100%; background:var(--bg-input); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:28px;">👤</div>
-                </div>
-                <h2 id="profile-display-name" style="font-size:22px; font-weight:700; margin-bottom:2px;">Creator Profile</h2>
-                <p id="profile-display-handle" style="color:var(--text-muted); font-size:13px; margin-bottom:12px;">@username</p>
-            </div>
-
-            <div class="dashboard-card">
-                <div class="card-title" style="margin-bottom:12px;">Session Metrics Storage</div>
-                <div style="font-size:13px; color:var(--text-muted); display:flex; flex-direction:column; gap:8px;">
-                    <div>🎯 Workspace Goal: <span id="meta-goal" style="color:var(--text-gold);">Not Set</span></div>
-                    <div>🔑 Connection Link: <span style="color:#00ff88;">Factual Dynamic API Proxy Delivery</span></div>
-                </div>
-            </div>
+            <p class="view-subtitle">Real-time predictive signals based on creator ecosystem.</p>
             
-            <button class="btn-outline" onclick="resetAppMemory()" style="border-color:#ff3b30; color:#ff3b30;">Clear Storage / Reset App</button>
+            <div class="metrics-grid">
+                <!-- Top Sound Lift -->
+                <div class="metric-card">
+                    <div class="metric-meta">
+                        <span>🎵 Top Sound Lift</span>
+                        <span style="background: rgba(255, 122, 0, 0.1); color: var(--accent-orange); padding: 2px 6px; border-radius: 4px; font-size: 10px;" id="trend-sound-lift">+42%</span>
+                    </div>
+                    <div class="value" style="font-size: 18px; margin-top: 8px;" id="trend-sound-name">Neon Drift</div>
+                </div>
+                <!-- Hashtag Velocity -->
+                <div class="metric-card">
+                    <div class="metric-meta">
+                        <span>🧭 Hashtag Velocity</span>
+                        <span style="background: rgba(255, 122, 0, 0.1); color: var(--accent-orange); padding: 2px 6px; border-radius: 4px; font-size: 10px;">Rapid</span>
+                    </div>
+                    <div class="value" style="font-size: 18px; margin-top: 8px;" id="trend-hashtag">#AIGlow</div>
+                </div>
+                <!-- AI Rec Score -->
+                <div class="metric-card">
+                    <div class="metric-meta">
+                        <span>🤖 AI Rec. Score</span>
+                        <span style="background: rgba(255, 122, 0, 0.1); color: var(--accent-orange); padding: 2px 6px; border-radius: 4px; font-size: 10px;">High</span>
+                    </div>
+                    <div class="value" style="font-size: 24px; margin-top: 8px;" id="trend-ai-score">98.4</div>
+                </div>
+                <!-- Predicted Reach -->
+                <div class="metric-card">
+                    <div class="metric-meta">
+                        <span>🕸 Predicted Reach</span>
+                        <span style="background: rgba(255, 122, 0, 0.1); color: var(--text-gold); padding: 2px 6px; border-radius: 4px; font-size: 10px;" id="trend-reach-val">8.2M</span>
+                    </div>
+                    <div class="value" style="font-size: 24px; margin-top: 8px;" id="trend-tier">Tier 1</div>
+                </div>
+            </div>
+
+            <!-- Engagement Prediction Box with Timeline labels -->
+            <div class="dashboard-card" style="position: relative;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+                    <div>
+                        <div class="card-title" style="font-size: 20px;">Engagement Prediction</div>
+                        <div style="color: var(--text-muted); font-size: 12px; margin-top: 4px;">Projected interactions per hour</div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-muted);">
+                        <span style="width: 8px; height: 8px; background: #e2b08a; border-radius: 50%;"></span> Active Forecast
+                    </div>
+                </div>
+                
+                <!-- Simple Dynamic Mini Bar Chart Visualization -->
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; height: 100px; padding: 0 10px; margin-bottom: 10px; border-bottom: 1px dashed var(--border-color);" id="trend-chart-bars">
+                    <div style="width: 8%; background: linear-gradient(to top, var(--border-color), #e2b08a); height: 40%; border-radius: 4px 4px 0 0;"></div>
+                    <div style="width: 8%; background: linear-gradient(to top, var(--border-color), #e2b08a); height: 65%; border-radius: 4px 4px 0 0;"></div>
+                    <div style="width: 8%; background: linear-gradient(to top, var(--border-color), #e2b08a); height: 85%; border-radius: 4px 4px 0 0;"></div>
+                    <div style="width: 8%; background: linear-gradient(to top, var(--border-color), #e2b08a); height: 50%; border-radius: 4px 4px 0 0;"></div>
+                    <div style="width: 8%; background: linear-gradient(to top, var(--border-color), #e2b08a); height: 30%; border-radius: 4px 4px 0 0;"></div>
+                    <div style="width: 8%; background: linear-gradient(to top, var(--border-color), #e2b08a); height: 75%; border-radius: 4px 4px 0 0;"></div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; color: var(--text-muted); font-size: 11px; padding: 0 5px;">
+                    <span>08:00</span><span>12:00</span><span>16:00</span><span>20:00</span><span>00:00</span><span>04:00</span>
+                </div>
+            </div>
+
+            <!-- Trending Creator Pair Card -->
+            <div class="dashboard-card" style="display: flex; align-items: center; justify-content: space-between; padding: 16px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="width: 48px; height: 48px; background: var(--bg-input); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; border: 1px solid var(--border-color);" id="trend-pair-avatar">✨</div>
+                    <div>
+                        <div class="card-title" style="font-size: 14px; margin: 0;">Trending Creator Pair</div>
+                        <div style="color: var(--text-muted); font-size: 12px; margin-top: 2px;" id="trend-pair-names">@CyberVision + @NexusPulse</div>
+                    </div>
+                </div>
+                <button style="background: #fecfa6; color: #000; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 700; font-size: 12px; cursor: pointer;">VIEW</button>
+            </div>
         </div>
 
         <!-- FIXED BOTTOM FOOTER NAVIGATION TAB BAR -->
