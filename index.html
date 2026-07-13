@@ -591,7 +591,7 @@
                 <div class="card-title" style="margin-bottom:12px;">Session Metrics Storage</div>
                 <div style="font-size:13px; color:var(--text-muted); display:flex; flex-direction:column; gap:8px;">
                     <div>🎯 Workspace Goal: <span id="meta-goal" style="color:var(--text-gold);">Not Set</span></div>
-                    <div>🔑 Connection Link: <span style="color:#00ff88;">Factual Dynamic API Delivery</span></div>
+                    <div>🔑 Connection Link: <span style="color:#00ff88;">Factual Dynamic API Proxy Delivery</span></div>
                 </div>
             </div>
             
@@ -620,7 +620,7 @@
 
     </div>
 
-    <!-- --- APP ROUTING ENGINE, LIFE-CYCLE PERSISTENCE AND LIVE DATA FETCH SYNC --- -->
+    <!-- --- CONTROL LOGIC SCRIPT --- -->
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
@@ -672,104 +672,62 @@
             element.classList.add('selected');
         }
 
-        // IMPROVED DETAILED FAULT-TOLERANT DATA FETCH NODE
         async function fetchLiveTikTokData(username, showOverlay = false) {
-    const overlay = document.getElementById('processing-screen');
-    const statusTitle = document.getElementById('sync-status-title');
-    const statusSub = document.getElementById('sync-status-sub');
-    
-    if (showOverlay) {
-        statusTitle.innerText = "Connecting App Stream...";
-        statusSub.innerText = `Pinging public metric nodes for @${username}`;
-        overlay.style.display = 'flex';
-    }
+            const overlay = document.getElementById('processing-screen');
+            const statusTitle = document.getElementById('sync-status-title');
+            const statusSub = document.getElementById('sync-status-sub');
+            
+            if (showOverlay) {
+                statusTitle.innerText = "Connecting App Stream...";
+                statusSub.innerText = `Pinging public metric nodes for @${username}`;
+                overlay.style.display = 'flex';
+            }
 
-    try {
-        // Core adjustment: Uses the primary endpoint routed securely via CORS proxy
-        const apiUrl = `https://corsproxy.io/?${encodeURIComponent('https://www.tikwm.com/api/user/info?unique_id=' + username)}`;
-        
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 9000); 
+            try {
+                // Correctly proxies requests via CORS proxy to guarantee live fetching
+                const apiUrl = `https://corsproxy.io/?${encodeURIComponent('https://www.tikwm.com/api/user/info?unique_id=' + username)}`;
+                
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 9000); 
 
-        const response = await fetch(apiUrl, { signal: controller.signal });
-        clearTimeout(timeoutId);
-        
-        if (!response.ok) throw new Error(`HTTP Error Status: ${response.status}`);
-        const dataJson = await response.json();
-        
-        // Handle cases where TikWM returns a message but no profile data
-        if (!dataJson || dataJson.code !== 0 || !dataJson.data || !dataJson.data.stats) {
-            throw new Error("Invalid username or endpoint rate-limited.");
-        }
+                const response = await fetch(apiUrl, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                
+                if (!response.ok) throw new Error(`HTTP Error Status: ${response.status}`);
+                const dataJson = await response.json();
+                
+                if (!dataJson || dataJson.code !== 0 || !dataJson.data || !dataJson.data.stats) {
+                    throw new Error("Invalid response schema.");
+                }
 
-        const node = dataJson.data;
-        const liveStats = {
-            followers: parseInt(node.stats.followerCount) || 0,
-            likes: parseInt(node.stats.heartCount) || 0,
-            videos: parseInt(node.stats.videoCount) || 0,
-            bio: node.user.signature || "No active creator bio recorded.",
-            nickname: node.user.nickname || username,
-            avatar: node.user.avatarThumb || ""
-        };
+                const node = dataJson.data;
+                const liveStats = {
+                    followers: parseInt(node.stats.followerCount) || 0,
+                    likes: parseInt(node.stats.heartCount) || 0,
+                    videos: parseInt(node.stats.videoCount) || 0,
+                    bio: node.user.signature || "No active creator bio recorded.",
+                    nickname: node.user.nickname || username,
+                    avatar: node.user.avatarThumb || ""
+                };
 
-        appState.liveMetrics = liveStats;
-        localStorage.setItem('ib_cached_metrics', JSON.stringify(liveStats));
-        
-        bindDataToUI();
-        
-        if (showOverlay) {
-            document.getElementById('success-headline').innerText = "Live Aggregation Complete";
-            document.getElementById('success-body').innerText = `Successfully loaded direct creator telemetry maps for @${username}.`;
-            overlay.style.display = 'none';
-        }
-        return true;
-
-    } catch (err) {
-        console.error("API Fetch Fault Node Details:", err);
-        if (showOverlay) {
-            overlay.style.display = 'none';
-            alert("Connection timed out. Retrying backup stream...");
-        }
-        
-        // Safe baseline fallback only if both proxy and main server fail entirely
-        const simulatedStats = {
-            followers: 162400000, // Hardcoded realistic baseline for verification if offline
-            likes: 2400000000,
-            videos: 380,
-            bio: "Network proxy failure. Displaying last verified structural cache matrices.",
-            nickname: username,
-            avatar: ""
-        };
-        
-        appState.liveMetrics = simulatedStats;
-        localStorage.setItem('ib_cached_metrics', JSON.stringify(simulatedStats));
-        bindDataToUI();
-        
-        return true; 
-    }
-}
+                appState.liveMetrics = liveStats;
+                localStorage.setItem('ib_cached_metrics', JSON.stringify(liveStats));
+                
+                bindDataToUI();
+                
+                if (showOverlay) {
+                    document.getElementById('success-headline').innerText = "Live Aggregation Complete";
+                    document.getElementById('success-body').innerText = `Successfully loaded direct creator telemetry maps for @${username}.`;
+                    overlay.style.display = 'none';
+                }
+                return true;
 
             } catch (err) {
                 console.error("API Fetch Fault Node Details:", err);
                 if (showOverlay) {
                     overlay.style.display = 'none';
                 }
-                
-                // Safety net fallback generation so the application never hangs if the third-party endpoint drops
-                const simulatedStats = {
-                    followers: Math.floor(Math.random() * 50000) + 1200,
-                    likes: Math.floor(Math.random() * 450000) + 5000,
-                    videos: Math.floor(Math.random() * 120) + 8,
-                    bio: "Sync active. Real telemetry connection throttled; showing closest matching cache matrices.",
-                    nickname: username,
-                    avatar: ""
-                };
-                
-                appState.liveMetrics = simulatedStats;
-                localStorage.setItem('ib_cached_metrics', JSON.stringify(simulatedStats));
-                bindDataToUI();
-                
-                return true; // Return true to allow UI to proceed using safe analytics data fallback instead of freezing
+                return false;
             }
         }
 
@@ -785,18 +743,15 @@
             appState.goal = selectedGoalCard ? selectedGoalCard.getAttribute('data-goal') : 'Grow Followers';
             appState.handle = handleInput;
 
-            // Instantly trigger UI changes to prevent delay feel
             document.getElementById('step-handle').classList.remove('active-step');
             const overlay = document.getElementById('processing-screen');
             overlay.style.display = 'flex';
             
             await new Promise(resolve => setTimeout(resolve, 100));
 
-            // Execute the background sync process safely
-            await fetchLiveTikTokData(handleInput, false);
-            
-            // Clean up loader and pass safely to success screen
+            const success = await fetchLiveTikTokData(handleInput, false);
             overlay.style.display = 'none';
+
             localStorage.setItem('ib_user_handle', appState.handle);
             localStorage.setItem('ib_user_goal', appState.goal);
             localStorage.setItem('ib_registered', 'true');
@@ -845,22 +800,19 @@
         }
 
         function resetAppMemory() {
-    if(confirm("Completely reset local dashboard storage profiles?")) {
-        // Clear variables first
-        localStorage.removeItem('ib_user_handle');
-        localStorage.removeItem('ib_user_goal');
-        localStorage.removeItem('ib_registered');
-        localStorage.removeItem('ib_cached_metrics');
-        
-        // Final broad wipe
-        localStorage.clear();
-        
-        // Small delay to ensure disk write completes before forcing the reload
-        setTimeout(() => {
-            window.location.href = window.location.pathname + '?clear=' + Date.now();
-        }, 300);
-    }
-}
+            if(confirm("Completely reset local dashboard storage profiles?")) {
+                localStorage.removeItem('ib_user_handle');
+                localStorage.removeItem('ib_user_goal');
+                localStorage.removeItem('ib_registered');
+                localStorage.removeItem('ib_cached_metrics');
+                localStorage.clear();
+                
+                setTimeout(() => {
+                    window.location.href = window.location.pathname + '?clear=' + Date.now();
+                }, 300);
+            }
+        }
+
         function triggerHapticFeedback() {
             if (tg.HapticFeedback) {
                 tg.HapticFeedback.impactOccurred('medium');
