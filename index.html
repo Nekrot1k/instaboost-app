@@ -818,7 +818,7 @@
 
         // REPLACE THIS URL WITH YOUR DEPLOYED CLOUDFLARE WORKER DEPLOYMENT
         // This tells the app to look at its own website URL + /api
-var backendUrl = window.location.origin + '/api?username=' + encodeURIComponent(username);
+var backendUrl = 'https://instaboost-app.dargon4ek.workers.dev/?username=' + encodeURIComponent(username);
         
         fetch(backendUrl)
             .then(function(res) { 
