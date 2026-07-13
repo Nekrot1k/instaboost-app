@@ -701,7 +701,7 @@
 
     </div>
 
-    <!-- --- CONTROL LOGIC SCRIPT --- -->
+   <!-- --- CONTROL LOGIC SCRIPT --- -->
     <script>
         window.addEventListener('error', function(e) {
             var box = document.getElementById('emergency-crash-log');
@@ -767,9 +767,9 @@
                     
                     if (!appState.liveMetrics) {
                         appState.liveMetrics = {
-                            followers: 0,
-                            likes: 0,
-                            videos: 0,
+                            followers: "Loading...",
+                            likes: "Loading...",
+                            videos: "Loading...",
                             bio: "Initializing tracking pipeline...",
                             nickname: savedHandle,
                             avatar: ""
@@ -804,89 +804,74 @@
         }
 
         function fetchLiveTikTokData(username, showOverlay) {
-    return new Promise(function(resolve, reject) {
-        if(showOverlay === undefined) showOverlay = false;
-        var overlay = document.getElementById('processing-screen');
-        var statusTitle = document.getElementById('sync-status-title');
-        var statusSub = document.getElementById('sync-status-sub');
-        
-        if (showOverlay && overlay) {
-            if(statusTitle) statusTitle.innerText = "Connecting App Stream...";
-            if(statusSub) statusSub.innerText = "Querying secure backend link for @" + username;
-            overlay.style.display = 'flex';
+            return new Promise(function(resolve, reject) {
+                if(showOverlay === undefined) showOverlay = false;
+                var overlay = document.getElementById('processing-screen');
+                var statusTitle = document.getElementById('sync-status-title');
+                var statusSub = document.getElementById('sync-status-sub');
+                
+                if (showOverlay && overlay) {
+                    if(statusTitle) statusTitle.innerText = "Connecting App Stream...";
+                    if(statusSub) statusSub.innerText = "Querying secure backend link for @" + username;
+                    overlay.style.display = 'flex';
+                }
+
+                var backendUrl = 'https://instaboost-app.dargon4ek.workers.dev/?username=' + encodeURIComponent(username);
+                
+                fetch(backendUrl)
+                    .then(function(res) { 
+                        return res.json(); 
+                    })
+                    .then(function(payload) {
+                        if (!payload || payload.error) {
+                            throw new Error("Target pipeline error response.");
+                        }
+
+                        var parsedFollowers = payload.followerCount || payload.followers || 0;
+                        var parsedLikes = payload.heartCount || payload.likesCount || payload.likes || 0;
+                        var parsedVideos = payload.videoCount || payload.videos || 0;
+
+                        appState.liveMetrics = {
+                            followers: parsedFollowers,
+                            likes: parsedLikes,
+                            videos: parsedVideos,
+                            bio: payload.signature || "Live track pipeline active.",
+                            nickname: payload.nickname || username,
+                            avatar: payload.avatar || ""
+                        };
+
+                        safeStorage.setItem('ib_cached_metrics', JSON.stringify(appState.liveMetrics));
+                        bindDataToUI();
+                        if (showOverlay && overlay) { overlay.style.display = 'none'; }
+                        resolve(appState.liveMetrics);
+                    })
+                    .catch(function(err) {
+                        console.error("Pipeline breakdown details: ", err);
+                        
+                        // Fallback cleanly checks if we have a real collected history
+                        var cachedMetrics = safeStorage.getItem('ib_cached_metrics');
+                        if (cachedMetrics) {
+                            try { appState.liveMetrics = JSON.parse(cachedMetrics); } catch(e){}
+                        }
+                        
+                        if (!appState.liveMetrics) {
+                            appState.liveMetrics = {
+                                followers: "Offline",
+                                likes: "Offline",
+                                videos: "Offline",
+                                bio: "Sync pipeline issues. Verify your worker data streams.",
+                                nickname: username,
+                                avatar: ""
+                            };
+                        }
+                        
+                        bindDataToUI();
+                        if (showOverlay && overlay) { overlay.style.display = 'none'; }
+                        resolve(appState.liveMetrics);
+                    });
+            });
         }
 
-        var backendUrl = 'https://instaboost-app.dargon4ek.workers.dev/?username=' + encodeURIComponent(username);
-        
-        fetch(backendUrl)
-            .then(function(res) { 
-                return res.json(); 
-            })
-            .then(function(payload) {
-                // If payload is totally empty or explicitly error, trip the fallback safely
-                if (!payload || payload.error) {
-                    throw new Error("Target pipeline error response.");
-                }
-
-                // Bulletproof mapping: parses whatever numbers the worker drops, fallback to 0 instead of crashing
-                var parsedFollowers = payload.followerCount || payload.followers || 0;
-                var parsedLikes = payload.heartCount || payload.likesCount || payload.likes || 0;
-                var parsedVideos = payload.videoCount || payload.videos || 0;
-
-                appState.liveMetrics = {
-                    followers: parseInt(parsedFollowers) || 0,
-                    likes: parseInt(parsedLikes) || 0,
-                    videos: parseInt(parsedVideos) || 0,
-                    bio: payload.signature || "Live track pipeline active.",
-                    nickname: payload.nickname || username,
-                    avatar: payload.avatar || ""
-                };
-
-                safeStorage.setItem('ib_cached_metrics', JSON.stringify(appState.liveMetrics));
-                bindDataToUI();
-                if (showOverlay && overlay) { overlay.style.display = 'none'; }
-                resolve(appState.liveMetrics);
-            })
-            .catch(function(err) {
-                console.error("Pipeline breakdown details: ", err);
-                setupLocalFallbackMetrics(username, err.message);
-                if (showOverlay && overlay) { overlay.style.display = 'none'; }
-                resolve(appState.liveMetrics);
-            });
-    });
-}
-    .catch(function(err) {
-                console.error("Pipeline breakdown details: ", err);
-                
-                // If the live collection fails, check if we have a real previous cache.
-                // If there is no cache, we notify the user instead of leaving silent zeros.
-                var cachedMetrics = safeStorage.getItem('ib_cached_metrics');
-                if (cachedMetrics) {
-                    try {
-                        appState.liveMetrics = JSON.parse(cachedMetrics);
-                    } catch(e) { 
-                        appState.liveMetrics = null; 
-                    }
-                }
-                
-                if (!appState.liveMetrics) {
-                    appState.liveMetrics = {
-                        followers: "Syncing...",
-                        likes: "Syncing...",
-                        videos: "Syncing...",
-                        bio: "Live data pipeline offline. Please check your Cloudflare Worker deployment.",
-                        nickname: username,
-                        avatar: ""
-                    };
-                }
-                
-                bindDataToUI();
-                if (showOverlay && overlay) { overlay.style.display = 'none'; }
-                resolve(appState.liveMetrics);
-            });
-    });
-}
-}
         function processLiveSyncData() {
             triggerHapticFeedback();
             var inputEl = document.getElementById('user-handle-input');
@@ -930,11 +915,17 @@
             if (appState.liveMetrics) {
                 var metrics = appState.liveMetrics;
                 
-                if(document.getElementById('val-followers')) document.getElementById('val-followers').innerText = Number(metrics.followers).toLocaleString();
-                if(document.getElementById('val-likes')) document.getElementById('val-likes').innerText = Number(metrics.likes).toLocaleString();
-                if(document.getElementById('val-videos')) document.getElementById('val-videos').innerText = Number(metrics.videos).toLocaleString();
+                if(document.getElementById('val-followers')) {
+                    document.getElementById('val-followers').innerText = isNaN(metrics.followers) ? metrics.followers : Number(metrics.followers).toLocaleString();
+                }
+                if(document.getElementById('val-likes')) {
+                    document.getElementById('val-likes').innerText = isNaN(metrics.likes) ? metrics.likes : Number(metrics.likes).toLocaleString();
+                }
+                if(document.getElementById('val-videos')) {
+                    document.getElementById('val-videos').innerText = isNaN(metrics.videos) ? metrics.videos : Number(metrics.videos).toLocaleString();
+                }
                 
-                var ratio = metrics.followers > 0 ? (metrics.likes / metrics.followers).toFixed(1) : "0.0";
+                var ratio = (metrics.followers > 0 && !isNaN(metrics.followers) && !isNaN(metrics.likes)) ? (metrics.likes / metrics.followers).toFixed(1) : "0.0";
                 if(document.getElementById('val-engagement')) document.getElementById('val-engagement').innerText = ratio + "x";
                 if(document.getElementById('profile-bio-text')) document.getElementById('profile-bio-text').innerText = metrics.bio;
                 if(document.getElementById('profile-display-name')) document.getElementById('profile-display-name').innerText = metrics.nickname;
@@ -944,14 +935,17 @@
                     var pairBox = document.getElementById('trend-pair-avatar');
                     if(pairBox) pairBox.innerHTML = '<img src="' + metrics.avatar + '" style="width:100%; height:100%; object-fit:cover; border-radius:6px;" />';
                 }
-                if(document.getElementById('stats-signature-desc')) document.getElementById('stats-signature-desc').innerText = "Active tracking signature confirmed. Account contains exactly " + Number(metrics.followers).toLocaleString() + " followers and " + Number(metrics.likes).toLocaleString() + " raw interaction likes across " + Number(metrics.videos).toLocaleString() + " uploads.";
+                if(document.getElementById('stats-signature-desc')) {
+                    document.getElementById('stats-signature-desc').innerText = isNaN(metrics.followers) ? "Awaiting secure stream initialization." : "Active tracking signature confirmed. Account contains exactly " + Number(metrics.followers).toLocaleString() + " followers and " + Number(metrics.likes).toLocaleString() + " raw interaction likes across " + Number(metrics.videos).toLocaleString() + " uploads.";
+                }
 
                 var tier = "Tier 4";
                 var reachStr = "50K";
-                if (metrics.followers > 50000000) { tier = "Tier 1"; reachStr = (metrics.followers * 0.12 / 1000000).toFixed(1) + "M"; }
-                else if (metrics.followers > 1000000) { tier = "Tier 2"; reachStr = (metrics.followers * 0.15 / 1000000).toFixed(1) + "M"; }
-                else if (metrics.followers > 100000) { tier = "Tier 3"; reachStr = (metrics.followers * 0.2 / 1000).toFixed(0) + "K"; }
-                else { reachStr = (metrics.followers * 0.4 / 1000).toFixed(0) + "K"; }
+                var followerNum = parseInt(metrics.followers) || 0;
+                if (followerNum > 50000000) { tier = "Tier 1"; reachStr = (followerNum * 0.12 / 1000000).toFixed(1) + "M"; }
+                else if (followerNum > 1000000) { tier = "Tier 2"; reachStr = (followerNum * 0.15 / 1000000).toFixed(1) + "M"; }
+                else if (followerNum > 100000) { tier = "Tier 3"; reachStr = (followerNum * 0.2 / 1000).toFixed(0) + "K"; }
+                else { reachStr = (followerNum * 0.4 / 1000).toFixed(0) + "K"; }
 
                 var seed = appState.handle.length;
                 var soundNames = ["Neon Drift", "Quantum Beats", "HyperDrive Sonic", "Cyber-Synth Wave", "Retro Ambient Fluid"];
