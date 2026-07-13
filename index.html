@@ -685,7 +685,8 @@
 
             try {
                 // Correctly proxies requests via CORS proxy to guarantee live fetching
-                const apiUrl = `https://corsproxy.io/?${encodeURIComponent('https://www.tikwm.com/api/user/info?unique_id=' + username)}`;
+                // Switch to a direct access mirror node that doesn't block GitHub Pages origins
+                const apiUrl = `https://api.tikwm.com/api/user/info?unique_id=${encodeURIComponent(username)}`;
                 
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 9000); 
