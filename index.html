@@ -806,52 +806,80 @@
         }
 
         function fetchLiveTikTokData(username, showOverlay) {
-            if(showOverlay === undefined) showOverlay = false;
-            var overlay = document.getElementById('processing-screen');
-            var statusTitle = document.getElementById('sync-status-title');
-            var statusSub = document.getElementById('sync-status-sub');
-            
-            if (showOverlay && overlay) {
-                if(statusTitle) statusTitle.innerText = "Connecting App Stream...";
-                if(statusSub) statusSub.innerText = "Pinging public metric nodes for @" + username;
-                overlay.style.display = 'flex';
+    if(showOverlay === undefined) showOverlay = false;
+    var overlay = document.getElementById('processing-screen');
+    var statusTitle = document.getElementById('sync-status-title');
+    var statusSub = document.getElementById('sync-status-sub');
+    
+    if (showOverlay && overlay) {
+        if(statusTitle) statusTitle.innerText = "Connecting App Stream...";
+        if(statusSub) statusSub.innerText = "Pinging public metric nodes for @" + username;
+        overlay.style.display = 'flex';
+    }
+
+    // Switched to an alternative open JSON endpoint that bypasses standard CORS restrictions
+    var apiUrl = 'https://api.tokcount.com/com/user/info/' + encodeURIComponent(username);
+    
+    fetch(apiUrl)
+        .then(function(res) { 
+            if(!res.ok) throw new Error("Network status invalid.");
+            return res.json(); 
+        })
+        .then(function(payload) {
+            // Check if the alternative API returned valid data structure
+            if (!payload || !payload.data || !payload.data.stats) {
+                throw new Error("Missing structural payload setup.");
             }
 
-            var targetUrl = 'https://www.tikwm.com/api/user/info?unique_id=' + encodeURIComponent(username);
-            var apiUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(targetUrl);
+            var node = payload.data;
+            appState.liveMetrics = {
+                followers: parseInt(node.stats.followers) || 0,
+                likes: parseInt(node.stats.heart) || parseInt(node.stats.likes) || 0,
+                videos: parseInt(node.stats.videos) || 0,
+                bio: node.user.signature || "Active creator workspace synced.",
+                nickname: node.user.nickname || username,
+                avatar: node.user.avatar || ""
+            };
+
+            safeStorage.setItem('ib_cached_metrics', JSON.stringify(appState.liveMetrics));
+            bindDataToUI();
+            if (showOverlay && overlay) { overlay.style.display = 'none'; }
+        })
+        .catch(function(err) {
+            console.warn("Primary API restricted. Trying secondary proxy route...", err);
             
-            // Standard fetch call optimized to handle silent pipeline blocks securely
-            fetch(apiUrl)
-                .then(function(res) { 
-                    if(!res.ok) throw new Error("Network status invalid.");
-                    return res.json(); 
-                })
-                .then(function(wrapperData) {
-                    var dataJson = typeof wrapperData.contents === 'string' ? JSON.parse(wrapperData.contents) : wrapperData.contents;
-                    if (!dataJson || dataJson.code !== 0 || !dataJson.data || !dataJson.data.stats) {
-                        throw new Error("Missing structural payload setup.");
+            // SECONDARY BACKUP ROUTE: If TokCount is down, retry TikWM via a cleaner text extraction string
+            var targetUrl = 'https://www.tikwm.com/api/user/info?unique_id=' + encodeURIComponent(username);
+            var backupApi = 'https://api.allorigins.win/get?url=' + encodeURIComponent(targetUrl) + '&nocache=' + Date.now();
+            
+            fetch(backupApi)
+                .then(function(r) { return r.json(); })
+                .then(function(wrapper) {
+                    var dataJson = typeof wrapper.contents === 'string' ? JSON.parse(wrapper.contents) : wrapper.contents;
+                    if(dataJson && dataJson.data && dataJson.data.stats) {
+                        var n = dataJson.data;
+                        appState.liveMetrics = {
+                            followers: parseInt(n.stats.followerCount) || 0,
+                            likes: parseInt(n.stats.heartCount) || 0,
+                            videos: parseInt(n.stats.videoCount) || 0,
+                            bio: n.user.signature || "Live track confirmed.",
+                            nickname: n.user.nickname || username,
+                            avatar: n.user.avatarThumb || ""
+                        };
+                        safeStorage.setItem('ib_cached_metrics', JSON.stringify(appState.liveMetrics));
+                        bindDataToUI();
+                    } else {
+                        setupLocalFallbackMetrics(username); // Only run simulation if absolutely everything fails
                     }
-
-                    var node = dataJson.data;
-                    appState.liveMetrics = {
-                        followers: parseInt(node.stats.followerCount) || 0,
-                        likes: parseInt(node.stats.heartCount) || 0,
-                        videos: parseInt(node.stats.videoCount) || 0,
-                        bio: node.user.signature || "No active creator bio recorded.",
-                        nickname: node.user.nickname || username,
-                        avatar: node.user.avatarThumb || ""
-                    };
-
-                    safeStorage.setItem('ib_cached_metrics', JSON.stringify(appState.liveMetrics));
-                    bindDataToUI();
-                    if (showOverlay && overlay) { overlay.style.display = 'none'; }
                 })
-                .catch(function(err) {
-                    console.warn("API tracking fallback triggered cleanly.", err);
+                .catch(function() {
                     setupLocalFallbackMetrics(username);
+                })
+                .finally(function() {
                     if (showOverlay && overlay) { overlay.style.display = 'none'; }
                 });
-        }
+        });
+}
 
         function setupLocalFallbackMetrics(username) {
             var baseFollowers = Math.floor(Math.random() * 80000) + 15000;
