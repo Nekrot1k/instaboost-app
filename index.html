@@ -698,19 +698,24 @@
             }
 
             try {
-                const apiUrl = `https://api.tikwm.com/api/user/info?unique_id=${encodeURIComponent(username)}`;
+                // Using an unthrottled, specialized open-source engine proxy to pass through firewalls
+                const targetUrl = `https://www.tikwm.com/api/user/info?unique_id=${encodeURIComponent(username)}`;
+                const apiUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
                 
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+                const timeoutId = setTimeout(() => controller.abort(), 10000); 
 
                 const response = await fetch(apiUrl, { signal: controller.signal });
                 clearTimeout(timeoutId);
                 
                 if (!response.ok) throw new Error(`HTTP Error Status: ${response.status}`);
-                const dataJson = await response.json();
+                
+                const wrapperData = await response.json();
+                // AllOrigins wraps the payload string inside .contents
+                const dataJson = JSON.parse(wrapperData.contents);
                 
                 if (!dataJson || dataJson.code !== 0 || !dataJson.data || !dataJson.data.stats) {
-                    throw new Error("Invalid response schema or rate limit.");
+                    throw new Error("Target creator not found or endpoint rate-limited.");
                 }
 
                 const node = dataJson.data;
