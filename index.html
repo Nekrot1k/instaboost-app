@@ -816,34 +816,30 @@
             overlay.style.display = 'flex';
         }
 
-        // REPLACE THIS URL WITH YOUR DEPLOYED CLOUDFLARE WORKER DEPLOYMENT
-        // This tells the app to look at its own website URL + /api
-var backendUrl = 'https://instaboost-app.dargon4ek.workers.dev/?username=' + encodeURIComponent(username);
+        var backendUrl = 'https://instaboost-app.dargon4ek.workers.dev/?username=' + encodeURIComponent(username);
         
         fetch(backendUrl)
             .then(function(res) { 
-                if(!res.ok) throw new Error("Backend pipeline down.");
                 return res.json(); 
             })
             .then(function(payload) {
-                // If the payload is completely empty, only then do we stop
-                if (!payload || payload.status === "error") {
-                    throw new Error("Target account not found or private.");
+                // If payload is totally empty or explicitly error, trip the fallback safely
+                if (!payload || payload.error) {
+                    throw new Error("Target pipeline error response.");
                 }
 
-                // Countik sometimes uses followerCount, sometimes fans, or sometimes returns undefined for new accounts.
-                // This safely looks for any valid number or defaults to a clean 0 instead of crashing.
-                var rawFollowers = payload.followerCount || payload.followers || payload.fans || 0;
-                var rawLikes = payload.heartCount || payload.likesCount || payload.hearts || payload.likes || 0;
-                var rawVideos = payload.videoCount || payload.videos || payload.diggCount || 0;
+                // Bulletproof mapping: parses whatever numbers the worker drops, fallback to 0 instead of crashing
+                var parsedFollowers = payload.followerCount || payload.followers || 0;
+                var parsedLikes = payload.heartCount || payload.likesCount || payload.likes || 0;
+                var parsedVideos = payload.videoCount || payload.videos || 0;
 
                 appState.liveMetrics = {
-                    followers: parseInt(rawFollowers) || 0,
-                    likes: parseInt(rawLikes) || 0,
-                    videos: parseInt(rawVideos) || 0,
-                    bio: payload.signature || payload.bio || "Live pipeline connected successfully.",
+                    followers: parseInt(parsedFollowers) || 0,
+                    likes: parseInt(parsedLikes) || 0,
+                    videos: parseInt(parsedVideos) || 0,
+                    bio: payload.signature || "Live track pipeline active.",
                     nickname: payload.nickname || username,
-                    avatar: payload.avatar || payload.avatarThumb || ""
+                    avatar: payload.avatar || ""
                 };
 
                 safeStorage.setItem('ib_cached_metrics', JSON.stringify(appState.liveMetrics));
@@ -852,24 +848,23 @@ var backendUrl = 'https://instaboost-app.dargon4ek.workers.dev/?username=' + enc
                 resolve(appState.liveMetrics);
             })
             .catch(function(err) {
-                console.error("Pipeline failure: ", err);
+                console.error("Pipeline breakdown details: ", err);
                 setupLocalFallbackMetrics(username, err.message);
                 if (showOverlay && overlay) { overlay.style.display = 'none'; }
                 resolve(appState.liveMetrics);
             });
     });
 }
-
-function setupLocalFallbackMetrics(username, errMsg) {
+// function setupLocalFallbackMetrics(username, errMsg) {
     // 100% REMOVED Math.random(). Fake data is now impossible.
-    appState.liveMetrics = {
-        followers: 0,
-        likes: 0,
-        videos: 0,
-        bio: "❌ Profile Sync Failed. Account might be too new for the Countik database, or API is restricted.",
-        nickname: "Not Found",
-        avatar: ""
-    };
+    // appState.liveMetrics = {
+        // followers: 0,
+        // likes: 0,
+        // videos: 0,
+        // bio: "❌ Profile Sync Failed. Account might be too new for the Countik database, or API is restricted.",
+        //nickname: "Not Found",
+        //avatar: ""
+    //};
 
     safeStorage.setItem('ib_cached_metrics', JSON.stringify(appState.liveMetrics));
     bindDataToUI();
