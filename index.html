@@ -672,7 +672,7 @@
             element.classList.add('selected');
         }
 
-        // UPDATED SECURE PUBLIC DATA AGGREGATION LOOKUP ENGINE
+        // NON-BLOCKING BACKGROUND NETWORK OPERATION ENGINE
         async function fetchLiveTikTokData(username, showOverlay = false) {
             const overlay = document.getElementById('processing-screen');
             const statusTitle = document.getElementById('sync-status-title');
@@ -685,17 +685,14 @@
             }
 
             try {
-                // Utilizing a high-availability open endpoint matrix designed for profile metrics distribution
-                const apiUrl = `https://corsproxy.io/?${encodeURIComponent('https://api.tikwm.com/api/user/info?unique_id=' + username)}`;
+                const apiUrl = `https://api.tikwm.com/api/user/info?unique_id=${encodeURIComponent(username)}`;
                 const response = await fetch(apiUrl);
                 
                 if (!response.ok) throw new Error("Endpoint verification failure.");
+                const dataJson = await response.json();
                 
-                const dataJson = await response.parse ? await response.parse() : await response.json();
-                
-                // Strict validation verification checks on response structure
                 if (!dataJson || dataJson.code !== 0 || !dataJson.data || !dataJson.data.stats) {
-                    throw new Error("Target creator handles dropped empty values. User might not exist.");
+                    throw new Error("Target creator handles dropped empty values.");
                 }
 
                 const node = dataJson.data;
@@ -724,12 +721,13 @@
                 console.error("API Fetch Fault Node:", err);
                 if (showOverlay) {
                     overlay.style.display = 'none';
-                    alert(`Sync Error: Could not connect to public metrics for "@${username}". Ensure the account exists and is not entirely hidden/private.`);
+                    alert(`Sync Error: Could not connect to public metrics for "@${username}".`);
                 }
                 return false;
             }
         }
 
+        // RE-ENGINEERED ASYNC FLOW TO ELIMINATE LAG
         async function processLiveSyncData() {
             triggerHapticFeedback();
             const handleInput = document.getElementById('user-handle-input').value.trim().replace('@', '');
@@ -742,10 +740,15 @@
             appState.goal = selectedGoalCard ? selectedGoalCard.getAttribute('data-goal') : 'Grow Followers';
             appState.handle = handleInput;
 
-            // Direct trigger verification pipeline
+            // FIX: Instantly advance UI to loading screen BEFORE network call execution
+            document.getElementById('step-handle').classList.remove('active-step');
             const overlay = document.getElementById('processing-screen');
             overlay.style.display = 'flex';
             
+            // Allow the browser to paint the layout smoothly using a tiny microtask pause
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            // Run network fetch strictly in background context
             const success = await fetchLiveTikTokData(handleInput, false);
             overlay.style.display = 'none';
 
@@ -755,8 +758,10 @@
                 localStorage.setItem('ib_registered', 'true');
                 appState.isRegistered = true;
 
-                document.getElementById('step-handle').classList.remove('active-step');
                 document.getElementById('step-success').classList.add('active-step');
+            } else {
+                // Return to username screen cleanly if registration fails
+                document.getElementById('step-handle').classList.add('active-step');
             }
         }
 
