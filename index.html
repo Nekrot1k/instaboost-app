@@ -37,6 +37,23 @@
             padding-bottom: 75px;
         }
 
+        /* --- EMERGENCY ERROR BOX --- */
+        #emergency-crash-log {
+            display: none;
+            background: #2a0808;
+            color: #ff8888;
+            padding: 15px;
+            font-family: monospace;
+            font-size: 12px;
+            border: 2px solid #ff3333;
+            margin: 10px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            z-index: 99999;
+            position: relative;
+        }
+
         /* --- STICKY APP NAVBAR CORNER HEADER --- */
         .app-header {
             display: flex;
@@ -436,6 +453,9 @@
 </head>
 <body>
 
+    <!-- Emergency Diagnostic Overlay Container -->
+    <div id="emergency-crash-log"></div>
+
     <!-- --- MULTI-STEP ONBOARDING SYSTEM --- -->
     <div id="step-welcome" class="onboarding-screen">
         <div style="text-align:center; padding-top: 20px;"><div class="brand-logo">Instaboost</div></div>
@@ -573,7 +593,6 @@
             <p class="view-subtitle">Real-time predictive signals based on creator ecosystem.</p>
             
             <div class="metrics-grid">
-                <!-- Top Sound Lift -->
                 <div class="metric-card">
                     <div class="metric-meta">
                         <span>🎵 Top Sound Lift</span>
@@ -581,7 +600,6 @@
                     </div>
                     <div class="value" style="font-size: 18px; margin-top: 8px;" id="trend-sound-name">Neon Drift</div>
                 </div>
-                <!-- Hashtag Velocity -->
                 <div class="metric-card">
                     <div class="metric-meta">
                         <span>🧭 Hashtag Velocity</span>
@@ -589,7 +607,6 @@
                     </div>
                     <div class="value" style="font-size: 18px; margin-top: 8px;" id="trend-hashtag">#AIGlow</div>
                 </div>
-                <!-- AI Rec Score -->
                 <div class="metric-card">
                     <div class="metric-meta">
                         <span>🤖 AI Rec. Score</span>
@@ -597,7 +614,6 @@
                     </div>
                     <div class="value" style="font-size: 24px; margin-top: 8px;" id="trend-ai-score">98.4</div>
                 </div>
-                <!-- Predicted Reach -->
                 <div class="metric-card">
                     <div class="metric-meta">
                         <span>🕸 Predicted Reach</span>
@@ -607,7 +623,6 @@
                 </div>
             </div>
 
-            <!-- Engagement Prediction Box with Timeline labels -->
             <div class="dashboard-card" style="position: relative;">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
                     <div>
@@ -619,7 +634,6 @@
                     </div>
                 </div>
                 
-                <!-- Simple Dynamic Mini Bar Chart Visualization -->
                 <div style="display: flex; justify-content: space-between; align-items: flex-end; height: 100px; padding: 0 10px; margin-bottom: 10px; border-bottom: 1px dashed var(--border-color);" id="trend-chart-bars">
                     <div style="width: 8%; background: linear-gradient(to top, var(--border-color), #e2b08a); height: 40%; border-radius: 4px 4px 0 0;"></div>
                     <div style="width: 8%; background: linear-gradient(to top, var(--border-color), #e2b08a); height: 65%; border-radius: 4px 4px 0 0;"></div>
@@ -634,7 +648,6 @@
                 </div>
             </div>
 
-            <!-- Trending Creator Pair Card -->
             <div class="dashboard-card" style="display: flex; align-items: center; justify-content: space-between; padding: 16px;">
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <div style="width: 48px; height: 48px; background: var(--bg-input); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; border: 1px solid var(--border-color);" id="trend-pair-avatar">✨</div>
@@ -690,8 +703,29 @@
 
     <!-- --- CONTROL LOGIC SCRIPT --- -->
     <script>
-        // Protective global encapsulation logic for safe loading inside Telegram Container 
-        let tg = null;
+        // Catch early syntax/execution crashes instantly
+        window.addEventListener('error', function(e) {
+            var box = document.getElementById('emergency-crash-log');
+            if(box) {
+                box.style.display = 'block';
+                box.innerText = "Fatal Runtime Error: " + e.message + "\nLine: " + e.lineno + "\nFile: " + e.filename;
+            }
+        });
+
+        // Safe Webview Storage wrapper to handle restrictive environments gracefully
+        var safeStorage = {
+            getItem: function(key) {
+                try { return localStorage.getItem(key); } catch(e) { return null; }
+            },
+            setItem: function(key, val) {
+                try { localStorage.setItem(key, val); return true; } catch(e) { return false; }
+            },
+            clear: function() {
+                try { localStorage.clear(); } catch(e) {}
+            }
+        };
+
+        var tg = null;
         try {
             if (window.Telegram && window.Telegram.WebApp) {
                 tg = window.Telegram.WebApp;
@@ -699,18 +733,17 @@
                 tg.expand();
             }
         } catch (e) {
-            console.error("Telegram script framework setup skipped or unavailable.", e);
+            console.error("TG interface binding skipped.", e);
         }
 
-        let appState = {
+        var appState = {
             handle: '',
             goal: '',
             isRegistered: false,
             liveMetrics: null
         };
 
-        window.addEventListener('DOMContentLoaded', () => {
-            // Signal platform view presence clear early to bypass timing freezes
+        window.addEventListener('DOMContentLoaded', function() {
             if (tg) {
                 try { tg.ready(); tg.expand(); } catch(err){}
             }
@@ -719,15 +752,15 @@
 
         function loadApplicationState() {
             try {
-                const savedHandle = localStorage.getItem('ib_user_handle');
-                const savedGoal = localStorage.getItem('ib_user_goal');
+                var savedHandle = safeStorage.getItem('ib_user_handle');
+                var savedGoal = safeStorage.getItem('ib_user_goal');
                 
                 if (savedHandle) {
                     appState.handle = savedHandle;
                     appState.goal = savedGoal || 'Grow Followers';
                     appState.isRegistered = true;
                     
-                    const cachedMetrics = localStorage.getItem('ib_cached_metrics');
+                    var cachedMetrics = safeStorage.getItem('ib_cached_metrics');
                     if(cachedMetrics) {
                         try {
                             appState.liveMetrics = JSON.parse(cachedMetrics);
@@ -752,200 +785,191 @@
                     document.getElementById('step-welcome').classList.add('active-step');
                 }
             } catch (e) {
-                // Total fallback strategy to guarantee window context handles loading screen errors
                 document.getElementById('step-welcome').classList.add('active-step');
             }
         }
 
         function goToStep(current, next) {
             triggerHapticFeedback();
-            const currentEl = document.getElementById(`step-${current}`);
-            const nextEl = document.getElementById(`step-${next}`);
+            var currentEl = document.getElementById('step-' + current);
+            var nextEl = document.getElementById('step-' + next);
             if(currentEl) currentEl.classList.remove('active-step');
             if(nextEl) nextEl.classList.add('active-step');
         }
 
         function selectCard(element) {
             triggerHapticFeedback();
-            document.querySelectorAll('.selectable-card').forEach(card => card.classList.remove('selected'));
+            document.querySelectorAll('.selectable-card').forEach(function(card) {
+                card.classList.remove('selected');
+            });
             element.classList.add('selected');
         }
 
-        async function fetchLiveTikTokData(username, showOverlay = false) {
-            const overlay = document.getElementById('processing-screen');
-            const statusTitle = document.getElementById('sync-status-title');
-            const statusSub = document.getElementById('sync-status-sub');
+        function fetchLiveTikTokData(username, showOverlay) {
+            if(showOverlay === undefined) showOverlay = false;
+            var overlay = document.getElementById('processing-screen');
+            var statusTitle = document.getElementById('sync-status-title');
+            var statusSub = document.getElementById('sync-status-sub');
             
             if (showOverlay && overlay) {
                 if(statusTitle) statusTitle.innerText = "Connecting App Stream...";
-                if(statusSub) statusSub.innerText = `Pinging public metric nodes for @${username}`;
+                if(statusSub) statusSub.innerText = "Pinging public metric nodes for @" + username;
                 overlay.style.display = 'flex';
             }
 
-            try {
-                const targetUrl = `https://www.tikwm.com/api/user/info?unique_id=${encodeURIComponent(username)}`;
-                const apiUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
-                
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 8000); 
+            var targetUrl = 'https://www.tikwm.com/api/user/info?unique_id=' + encodeURIComponent(username);
+            var apiUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(targetUrl);
+            
+            // Standard fetch call optimized to handle silent pipeline blocks securely
+            fetch(apiUrl)
+                .then(function(res) { 
+                    if(!res.ok) throw new Error("Network status invalid.");
+                    return res.json(); 
+                })
+                .then(function(wrapperData) {
+                    var dataJson = typeof wrapperData.contents === 'string' ? JSON.parse(wrapperData.contents) : wrapperData.contents;
+                    if (!dataJson || dataJson.code !== 0 || !dataJson.data || !dataJson.data.stats) {
+                        throw new Error("Missing structural payload setup.");
+                    }
 
-                const response = await fetch(apiUrl, { signal: controller.signal });
-                clearTimeout(timeoutId);
-                
-                if (!response.ok) throw new Error(`HTTP Error Status: ${response.status}`);
-                
-                const wrapperData = await response.json();
-                let dataJson;
-                try {
-                    dataJson = typeof wrapperData.contents === 'string' ? JSON.parse(wrapperData.contents) : wrapperData.contents;
-                } catch(e) {
-                    throw new Error("Proxy format invalid structure.");
-                }
-                
-                if (!dataJson || dataJson.code !== 0 || !dataJson.data || !dataJson.data.stats) {
-                    throw new Error("Target creator missing.");
-                }
+                    var node = dataJson.data;
+                    appState.liveMetrics = {
+                        followers: parseInt(node.stats.followerCount) || 0,
+                        likes: parseInt(node.stats.heartCount) || 0,
+                        videos: parseInt(node.stats.videoCount) || 0,
+                        bio: node.user.signature || "No active creator bio recorded.",
+                        nickname: node.user.nickname || username,
+                        avatar: node.user.avatarThumb || ""
+                    };
 
-                const node = dataJson.data;
-                const liveStats = {
-                    followers: parseInt(node.stats.followerCount) || 0,
-                    likes: parseInt(node.stats.heartCount) || 0,
-                    videos: parseInt(node.stats.videoCount) || 0,
-                    bio: node.user.signature || "No active creator bio recorded.",
-                    nickname: node.user.nickname || username,
-                    avatar: node.user.avatarThumb || ""
-                };
-
-                appState.liveMetrics = liveStats;
-                localStorage.setItem('ib_cached_metrics', JSON.stringify(liveStats));
-                bindDataToUI();
-                
-                if (showOverlay && overlay) { overlay.style.display = 'none'; }
-                return true;
-
-            } catch (err) {
-                console.warn("Live API routing fallback activated.", err);
-                
-                let baseFollowers = Math.floor(Math.random() * 80000) + 15000;
-                let baseLikes = Math.floor(baseFollowers * (Math.random() * 4 + 2));
-                let baseVideos = Math.floor(Math.random() * 140) + 24;
-
-                const lowerName = username.toLowerCase();
-                if (lowerName.includes('khaby')) {
-                    baseFollowers = 162500000; baseLikes = 2400000000; baseVideos = 392;
-                } else if (lowerName.includes('mrbeast')) {
-                    baseFollowers = 104000000; baseLikes = 980000000; baseVideos = 280;
-                }
-
-                const fallbackStats = {
-                    followers: baseFollowers,
-                    likes: baseLikes,
-                    videos: baseVideos,
-                    bio: "⚡ Sandbox Engine Active. Production API origin isolated or rate-limited.",
-                    nickname: username,
-                    avatar: ""
-                };
-
-                appState.liveMetrics = fallbackStats;
-                localStorage.setItem('ib_cached_metrics', JSON.stringify(fallbackStats));
-                bindDataToUI();
-
-                if (showOverlay && overlay) { overlay.style.display = 'none'; }
-                return true; 
-            }
+                    safeStorage.setItem('ib_cached_metrics', JSON.stringify(appState.liveMetrics));
+                    bindDataToUI();
+                    if (showOverlay && overlay) { overlay.style.display = 'none'; }
+                })
+                .catch(function(err) {
+                    console.warn("API tracking fallback triggered cleanly.", err);
+                    setupLocalFallbackMetrics(username);
+                    if (showOverlay && overlay) { overlay.style.display = 'none'; }
+                });
         }
 
-        async function processLiveSyncData() {
+        function setupLocalFallbackMetrics(username) {
+            var baseFollowers = Math.floor(Math.random() * 80000) + 15000;
+            var baseLikes = Math.floor(baseFollowers * (Math.random() * 4 + 2));
+            var baseVideos = Math.floor(Math.random() * 140) + 24;
+
+            var lowerName = username.toLowerCase();
+            if (lowerName.includes('khaby')) {
+                baseFollowers = 162500000; baseLikes = 2400000000; baseVideos = 392;
+            } else if (lowerName.includes('mrbeast')) {
+                baseFollowers = 104000000; baseLikes = 980000000; baseVideos = 280;
+            }
+
+            appState.liveMetrics = {
+                followers: baseFollowers,
+                likes: baseLikes,
+                videos: baseVideos,
+                bio: "⚡ Sandbox Engine Active. Production API origin isolated or rate-limited.",
+                nickname: username,
+                avatar: ""
+            };
+
+            safeStorage.setItem('ib_cached_metrics', JSON.stringify(appState.liveMetrics));
+            bindDataToUI();
+        }
+
+        function processLiveSyncData() {
             triggerHapticFeedback();
-            const inputEl = document.getElementById('user-handle-input');
-            const handleInput = inputEl ? inputEl.value.trim().replace('@', '') : '';
+            var inputEl = document.getElementById('user-handle-input');
+            var handleInput = inputEl ? inputEl.value.trim().replace('@', '') : '';
             if (!handleInput) {
                 alert('Please enter an active TikTok handle.');
                 return;
             }
 
-            const selectedGoalCard = document.querySelector('.selectable-card.selected');
+            var selectedGoalCard = document.querySelector('.selectable-card.selected');
             appState.goal = selectedGoalCard ? selectedGoalCard.getAttribute('data-goal') : 'Grow Followers';
             appState.handle = handleInput;
 
-            const stepHandle = document.getElementById('step-handle');
+            var stepHandle = document.getElementById('step-handle');
             if(stepHandle) stepHandle.classList.remove('active-step');
             
-            const overlay = document.getElementById('processing-screen');
+            var overlay = document.getElementById('processing-screen');
             if(overlay) overlay.style.display = 'flex';
             
-            await new Promise(resolve => setTimeout(resolve, 200));
-            await fetchLiveTikTokData(handleInput, false);
-            
-            localStorage.setItem('ib_user_handle', appState.handle);
-            localStorage.setItem('ib_user_goal', appState.goal);
-            localStorage.setItem('ib_registered', 'true');
-            appState.isRegistered = true;
+            setTimeout(function() {
+                fetchLiveTikTokData(handleInput, false);
+                
+                safeStorage.setItem('ib_user_handle', appState.handle);
+                safeStorage.setItem('ib_user_goal', appState.goal);
+                safeStorage.setItem('ib_registered', 'true');
+                appState.isRegistered = true;
 
-            bindDataToUI();
+                bindDataToUI();
 
-            if(overlay) overlay.style.display = 'none';
-            const stepSuccess = document.getElementById('step-success');
-            if(stepSuccess) stepSuccess.classList.add('active-step');
+                if(overlay) overlay.style.display = 'none';
+                var stepSuccess = document.getElementById('step-success');
+                if(stepSuccess) stepSuccess.classList.add('active-step');
+            }, 400);
         }
 
         function bindDataToUI() {
             if (!appState.handle) return;
-            const displayHandle = `@${appState.handle.toLowerCase()}`;
+            var displayHandle = "@" + appState.handle.toLowerCase();
             
             if(document.getElementById('dash-handle-title')) document.getElementById('dash-handle-title').innerText = displayHandle;
             if(document.getElementById('profile-display-handle')) document.getElementById('profile-display-handle').innerText = displayHandle;
             if(document.getElementById('meta-goal')) document.getElementById('meta-goal').innerText = appState.goal;
 
             if (appState.liveMetrics) {
-                const metrics = appState.liveMetrics;
+                var metrics = appState.liveMetrics;
                 
                 if(document.getElementById('val-followers')) document.getElementById('val-followers').innerText = Number(metrics.followers).toLocaleString();
                 if(document.getElementById('val-likes')) document.getElementById('val-likes').innerText = Number(metrics.likes).toLocaleString();
                 if(document.getElementById('val-videos')) document.getElementById('val-videos').innerText = Number(metrics.videos).toLocaleString();
                 
-                const ratio = metrics.followers > 0 ? (metrics.likes / metrics.followers).toFixed(1) : "0.0";
-                if(document.getElementById('val-engagement')) document.getElementById('val-engagement').innerText = `${ratio}x`;
+                var ratio = metrics.followers > 0 ? (metrics.likes / metrics.followers).toFixed(1) : "0.0";
+                if(document.getElementById('val-engagement')) document.getElementById('val-engagement').innerText = ratio + "x";
                 if(document.getElementById('profile-bio-text')) document.getElementById('profile-bio-text').innerText = metrics.bio;
                 if(document.getElementById('profile-display-name')) document.getElementById('profile-display-name').innerText = metrics.nickname;
                 
                 if (metrics.avatar) {
-                    if(document.getElementById('profile-avatar-box')) document.getElementById('profile-avatar-box').innerHTML = `<img src="${metrics.avatar}" alt="Avatar">`;
-                    const pairBox = document.getElementById('trend-pair-avatar');
-                    if(pairBox) pairBox.innerHTML = `<img src="${metrics.avatar}" style="width:100%; height:100%; object-fit:cover; border-radius:6px;" />`;
+                    if(document.getElementById('profile-avatar-box')) document.getElementById('profile-avatar-box').innerHTML = '<img src="' + metrics.avatar + '" alt="Avatar">';
+                    var pairBox = document.getElementById('trend-pair-avatar');
+                    if(pairBox) pairBox.innerHTML = '<img src="' + metrics.avatar + '" style="width:100%; height:100%; object-fit:cover; border-radius:6px;" />';
                 }
-                if(document.getElementById('stats-signature-desc')) document.getElementById('stats-signature-desc').innerText = `Active tracking signature confirmed. Account contains exactly ${Number(metrics.followers).toLocaleString()} metrics followers and ${Number(metrics.likes).toLocaleString()} raw interaction likes across ${Number(metrics.videos).toLocaleString()} uploads.`;
+                if(document.getElementById('stats-signature-desc')) document.getElementById('stats-signature-desc').innerText = "Active tracking signature confirmed. Account contains exactly " + Number(metrics.followers).toLocaleString() + " metrics followers and " + Number(metrics.likes).toLocaleString() + " raw interaction likes across " + Number(metrics.videos).toLocaleString() + " uploads.";
 
-                let tier = "Tier 4";
-                let reachStr = "50K";
+                var tier = "Tier 4";
+                var reachStr = "50K";
                 if (metrics.followers > 50000000) { tier = "Tier 1"; reachStr = (metrics.followers * 0.12 / 1000000).toFixed(1) + "M"; }
                 else if (metrics.followers > 1000000) { tier = "Tier 2"; reachStr = (metrics.followers * 0.15 / 1000000).toFixed(1) + "M"; }
                 else if (metrics.followers > 100000) { tier = "Tier 3"; reachStr = (metrics.followers * 0.2 / 1000).toFixed(0) + "K"; }
                 else { reachStr = (metrics.followers * 0.4 / 1000).toFixed(0) + "K"; }
 
-                const seed = appState.handle.length;
-                const soundNames = ["Neon Drift", "Quantum Beats", "HyperDrive Sonic", "Cyber-Synth Wave", "Retro Ambient Fluid"];
-                const hashtags = ["#AIGlow", "#CreatorVelocity", "#TechPulse", "#BioScale", "#AlphaInbound"];
+                var seed = appState.handle.length;
+                var soundNames = ["Neon Drift", "Quantum Beats", "HyperDrive Sonic", "Cyber-Synth Wave", "Retro Ambient Fluid"];
+                var hashtags = ["#AIGlow", "#CreatorVelocity", "#TechPulse", "#BioScale", "#AlphaInbound"];
                 
                 if(document.getElementById('trend-sound-name')) document.getElementById('trend-sound-name').innerText = soundNames[seed % soundNames.length];
                 if(document.getElementById('trend-hashtag')) document.getElementById('trend-hashtag').innerText = hashtags[(seed + 2) % hashtags.length];
-                if(document.getElementById('trend-sound-lift')) document.getElementById('trend-sound-lift').innerText = `+${((seed * 7) % 60) + 15}%`;
+                if(document.getElementById('trend-sound-lift')) document.getElementById('trend-sound-lift').innerText = "+" + (((seed * 7) % 60) + 15) + "%";
                 
-                let calculatedScore = (85 + (parseFloat(ratio) * 1.5)).toFixed(1);
+                var calculatedScore = (85 + (parseFloat(ratio) * 1.5)).toFixed(1);
                 if (calculatedScore > 100) calculatedScore = "99.2";
                 if(document.getElementById('trend-ai-score')) document.getElementById('trend-ai-score').innerText = calculatedScore;
                 
                 if(document.getElementById('trend-tier')) document.getElementById('trend-tier').innerText = tier;
                 if(document.getElementById('trend-reach-val')) document.getElementById('trend-reach-val').innerText = reachStr;
-                if(document.getElementById('trend-pair-names')) document.getElementById('trend-pair-names').innerText = `${displayHandle} + @NexusPulse`;
+                if(document.getElementById('trend-pair-names')) document.getElementById('trend-pair-names').innerText = displayHandle + " + @NexusPulse";
 
-                const barsContainer = document.getElementById('trend-chart-bars');
+                var barsContainer = document.getElementById('trend-chart-bars');
                 if (barsContainer) {
-                    const baseHeights = [35, 60, 90, 55, 40, 80];
-                    let barHtml = "";
-                    baseHeights.forEach((h, idx) => {
-                        let variableHeight = Math.min(100, Math.max(15, h + (seed % 3 == 0 ? 10 : -10)));
-                        barHtml += `<div style="width: 8%; background: linear-gradient(to top, var(--bg-input), var(--text-gold)); height: ${variableHeight}%; border-radius: 4px 4px 0 0;"></div>`;
+                    var baseHeights = [35, 60, 90, 55, 40, 80];
+                    var barHtml = "";
+                    baseHeights.forEach(function(h) {
+                        var variableHeight = Math.min(100, Math.max(15, h + (seed % 3 == 0 ? 10 : -10)));
+                        barHtml += '<div style="width: 8%; background: linear-gradient(to top, var(--bg-input), var(--text-gold)); height: ' + variableHeight + '%; border-radius: 4px 4px 0 0;"></div>';
                     });
                     barsContainer.innerHTML = barHtml;
                 }
@@ -954,25 +978,29 @@
 
         function launchMainDashboardWorkspace() {
             triggerHapticFeedback();
-            const stepSuccess = document.getElementById('step-success');
+            var stepSuccess = document.getElementById('step-success');
             if(stepSuccess) stepSuccess.classList.remove('active-step');
             document.getElementById('main-application-suite').style.display = 'block';
         }
 
         function switchTab(tabId, tabBtnElement) {
             triggerHapticFeedback();
-            document.querySelectorAll('.app-view').forEach(view => view.classList.remove('active-view'));
-            document.querySelectorAll('.tab-item').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.app-view').forEach(function(view) {
+                view.classList.remove('active-view');
+            });
+            document.querySelectorAll('.tab-item').forEach(function(btn) {
+                btn.classList.remove('active');
+            });
             
-            const targetedView = document.getElementById(`view-${tabId}`);
+            var targetedView = document.getElementById('view-' + tabId);
             if(targetedView) targetedView.classList.add('active-view');
             if(tabBtnElement) tabBtnElement.classList.add('active');
         }
 
         function resetAppMemory() {
             if(confirm("Completely reset local dashboard storage profiles?")) {
-                localStorage.clear();
-                setTimeout(() => {
+                safeStorage.clear();
+                setTimeout(function() {
                     window.location.href = window.location.pathname + '?clear=' + Date.now();
                 }, 200);
             }
