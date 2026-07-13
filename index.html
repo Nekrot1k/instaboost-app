@@ -804,80 +804,68 @@
         }
 
         function fetchLiveTikTokData(username, showOverlay) {
-            return new Promise(function(resolve, reject) {
-                if(showOverlay === undefined) showOverlay = false;
-                var overlay = document.getElementById('processing-screen');
-                var statusTitle = document.getElementById('sync-status-title');
-                var statusSub = document.getElementById('sync-status-sub');
-                
-                if (showOverlay && overlay) {
-                    if(statusTitle) statusTitle.innerText = "Connecting App Stream...";
-                    if(statusSub) statusSub.innerText = "Pinging public counter nodes for @" + username;
-                    overlay.style.display = 'flex';
+    return new Promise(function(resolve, reject) {
+        if(showOverlay === undefined) showOverlay = false;
+        var overlay = document.getElementById('processing-screen');
+        var statusTitle = document.getElementById('sync-status-title');
+        var statusSub = document.getElementById('sync-status-sub');
+        
+        if (showOverlay && overlay) {
+            if(statusTitle) statusTitle.innerText = "Connecting App Stream...";
+            if(statusSub) statusSub.innerText = "Querying secure backend link for @" + username;
+            overlay.style.display = 'flex';
+        }
+
+        // REPLACE THIS URL WITH YOUR DEPLOYED CLOUDFLARE WORKER DEPLOYMENT
+        var backendUrl = 'https://instaboost-app.dargon4ek.workers.dev/' + encodeURIComponent(username);
+        
+        fetch(backendUrl)
+            .then(function(res) { 
+                if(!res.ok) throw new Error("Backend pipeline down.");
+                return res.json(); 
+            })
+            .then(function(payload) {
+                if (!payload || payload.status === "error" || !payload.followerCount) {
+                    throw new Error("Target account not found or private.");
                 }
 
-                var apiUrl = 'https://countik.com/api/userinfo/' + encodeURIComponent(username);
-                
-                fetch(apiUrl)
-                    .then(function(res) { 
-                        if(!res.ok) throw new Error("CORS or network error on primary node.");
-                        return res.json(); 
-                    })
-                    .then(function(payload) {
-                        if (!payload || payload.status === "error" || !payload.followerCount) {
-                            throw new Error("Invalid payload structure returned.");
-                        }
+                appState.liveMetrics = {
+                    followers: parseInt(payload.followerCount) || 0,
+                    likes: parseInt(payload.heartCount) || parseInt(payload.likesCount) || 0,
+                    videos: parseInt(payload.videoCount) || 0,
+                    bio: payload.signature || "Live track confirmed.",
+                    nickname: payload.nickname || username,
+                    avatar: payload.avatar || ""
+                };
 
-                        appState.liveMetrics = {
-                            followers: parseInt(payload.followerCount) || 0,
-                            likes: parseInt(payload.heartCount) || parseInt(payload.likesCount) || 0,
-                            videos: parseInt(payload.videoCount) || 0,
-                            bio: payload.signature || "Live track confirmed.",
-                            nickname: payload.nickname || username,
-                            avatar: payload.avatar || ""
-                        };
-
-                        safeStorage.setItem('ib_cached_metrics', JSON.stringify(appState.liveMetrics));
-                        bindDataToUI();
-                        if (showOverlay && overlay) { overlay.style.display = 'none'; }
-                        resolve(appState.liveMetrics);
-                    })
-                    .catch(function(err) {
-                        console.warn("Primary API isolated. Testing secondary proxy bridge...", err);
-                        
-                        var backupUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://countik.com/api/userinfo/' + username) + '&nocache=' + Date.now();
-                        
-                        fetch(backupUrl)
-                            .then(function(r) { return r.json(); })
-                            .then(function(wrapper) {
-                                var dataJson = typeof wrapper.contents === 'string' ? JSON.parse(wrapper.contents) : wrapper.contents;
-                                if(dataJson && dataJson.followerCount) {
-                                    appState.liveMetrics = {
-                                        followers: parseInt(dataJson.followerCount) || 0,
-                                        likes: parseInt(dataJson.heartCount) || 0,
-                                        videos: parseInt(dataJson.videoCount) || 0,
-                                        bio: dataJson.signature || "Live track confirmed via proxy bridge.",
-                                        nickname: dataJson.nickname || username,
-                                        avatar: dataJson.avatar || ""
-                                    };
-                                    safeStorage.setItem('ib_cached_metrics', JSON.stringify(appState.liveMetrics));
-                                    bindDataToUI();
-                                    resolve(appState.liveMetrics);
-                                } else {
-                                    setupLocalFallbackMetrics(username);
-                                    resolve(appState.liveMetrics);
-                                }
-                            })
-                            .catch(function() {
-                                setupLocalFallbackMetrics(username);
-                                resolve(appState.liveMetrics);
-                            })
-                            .finally(function() {
-                                if (showOverlay && overlay) { overlay.style.display = 'none'; }
-                            });
-                    });
+                safeStorage.setItem('ib_cached_metrics', JSON.stringify(appState.liveMetrics));
+                bindDataToUI();
+                if (showOverlay && overlay) { overlay.style.display = 'none'; }
+                resolve(appState.liveMetrics);
+            })
+            .catch(function(err) {
+                console.error("Pipeline failure: ", err);
+                setupLocalFallbackMetrics(username, err.message);
+                if (showOverlay && overlay) { overlay.style.display = 'none'; }
+                resolve(appState.liveMetrics);
             });
-        }
+    });
+}
+
+function setupLocalFallbackMetrics(username, errMsg) {
+    // Completely removed fake random numbers. Shows an explicit error block on failure.
+    appState.liveMetrics = {
+        followers: 0,
+        likes: 0,
+        videos: 0,
+        bio: "❌ Metrics connection offline: " + (errMsg || "API Isolation"),
+        nickname: "Sync Error",
+        avatar: ""
+    };
+
+    safeStorage.setItem('ib_cached_metrics', JSON.stringify(appState.liveMetrics));
+    bindDataToUI();
+}
 
         function setupLocalFallbackMetrics(username) {
             var baseFollowers = Math.floor(Math.random() * 80000) + 15000;
