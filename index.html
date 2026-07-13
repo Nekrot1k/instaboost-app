@@ -647,6 +647,25 @@
             </div>
         </div>
 
+        <!-- SECTION 4: Profile Configuration View -->
+        <div id="view-profile" class="app-view">
+            <h1>Workspace Settings</h1>
+            <p class="view-subtitle">Manage your active pipeline parameters.</p>
+            <div class="profile-hero">
+                <div class="avatar-frame" id="profile-avatar-box">✨</div>
+                <h2 style="font-size:20px; font-weight:700;" id="profile-display-name">Creator Account</h2>
+                <p style="color:var(--accent-orange); font-size:14px; margin-top:2px; font-weight:600;" id="profile-display-handle">@user</p>
+            </div>
+            <div class="dashboard-card">
+                <div class="card-title" style="margin-bottom:12px;">Pipeline Parameters</div>
+                <div style="display:flex; justify-content:space-between; padding: 8px 0; border-bottom: 1px solid var(--border-color);">
+                    <span style="color:var(--text-muted); font-size:13px;">Target Optimization Strategy</span>
+                    <span style="color:var(--text-gold); font-size:13px; font-weight:600;" id="meta-goal">None Specified</span>
+                </div>
+            </div>
+            <button class="btn-outline" style="border-color:#ff4d0d; color:#ff4d0d;" onclick="resetAppMemory()">Disconnect Workspace</button>
+        </div>
+
         <!-- FIXED BOTTOM FOOTER NAVIGATION TAB BAR -->
         <nav class="nav-tab-bar">
             <button class="tab-item active" onclick="switchTab('home', this)">
@@ -760,8 +779,13 @@
                 if (!response.ok) throw new Error(`HTTP Error Status: ${response.status}`);
                 
                 const wrapperData = await response.json();
-                // AllOrigins wraps the payload string inside .contents
-                const dataJson = JSON.parse(wrapperData.contents);
+                // Safe unhandled parser intercept protection rule
+                let dataJson;
+                try {
+                    dataJson = typeof wrapperData.contents === 'string' ? JSON.parse(wrapperData.contents) : wrapperData.contents;
+                } catch(e) {
+                    throw new Error("Proxy response body string invalid syntax structural error.");
+                }
                 
                 if (!dataJson || dataJson.code !== 0 || !dataJson.data || !dataJson.data.stats) {
                     throw new Error("Target creator not found or endpoint rate-limited.");
@@ -858,30 +882,32 @@
 
         function bindDataToUI() {
             const displayHandle = `@${appState.handle.toLowerCase()}`;
-            document.getElementById('dash-handle-title').innerText = displayHandle;
-            document.getElementById('profile-display-handle').innerText = displayHandle;
-            document.getElementById('meta-goal').innerText = appState.goal;
+            
+            // Conditional initialization safeguards to defend runtime execution pipelines
+            if(document.getElementById('dash-handle-title')) document.getElementById('dash-handle-title').innerText = displayHandle;
+            if(document.getElementById('profile-display-handle')) document.getElementById('profile-display-handle').innerText = displayHandle;
+            if(document.getElementById('meta-goal')) document.getElementById('meta-goal').innerText = appState.goal;
 
             if (appState.liveMetrics) {
                 const metrics = appState.liveMetrics;
                 
                 // 1. Core Dashboard Updates
-                document.getElementById('val-followers').innerText = metrics.followers.toLocaleString();
-                document.getElementById('val-likes').innerText = metrics.likes.toLocaleString();
-                document.getElementById('val-videos').innerText = metrics.videos.toLocaleString();
+                if(document.getElementById('val-followers')) document.getElementById('val-followers').innerText = metrics.followers.toLocaleString();
+                if(document.getElementById('val-likes')) document.getElementById('val-likes').innerText = metrics.likes.toLocaleString();
+                if(document.getElementById('val-videos')) document.getElementById('val-videos').innerText = metrics.videos.toLocaleString();
                 
                 const ratio = metrics.followers > 0 ? (metrics.likes / metrics.followers).toFixed(1) : "0.0";
-                document.getElementById('val-engagement').innerText = `${ratio}x`;
-                document.getElementById('profile-bio-text').innerText = metrics.bio;
-                document.getElementById('profile-display-name').innerText = metrics.nickname;
+                if(document.getElementById('val-engagement')) document.getElementById('val-engagement').innerText = `${ratio}x`;
+                if(document.getElementById('profile-bio-text')) document.getElementById('profile-bio-text').innerText = metrics.bio;
+                if(document.getElementById('profile-display-name')) document.getElementById('profile-display-name').innerText = metrics.nickname;
                 
                 if (metrics.avatar) {
-                    document.getElementById('profile-avatar-box').innerHTML = `<img src="${metrics.avatar}" alt="Avatar">`;
+                    if(document.getElementById('profile-avatar-box')) document.getElementById('profile-avatar-box').innerHTML = `<img src="${metrics.avatar}" alt="Avatar">`;
                     // Shared avatar frame shortcut sync for trends card if available
                     const pairBox = document.getElementById('trend-pair-avatar');
                     if(pairBox) pairBox.innerHTML = `<img src="${metrics.avatar}" style="width:100%; height:100%; object-fit:cover; border-radius:6px;" />`;
                 }
-                document.getElementById('stats-signature-desc').innerText = `Active tracking signature confirmed. Account contains exactly ${metrics.followers.toLocaleString()} metrics followers and ${metrics.likes.toLocaleString()} raw interaction likes across ${metrics.videos.toLocaleString()} uploads.`;
+                if(document.getElementById('stats-signature-desc')) document.getElementById('stats-signature-desc').innerText = `Active tracking signature confirmed. Account contains exactly ${metrics.followers.toLocaleString()} metrics followers and ${metrics.likes.toLocaleString()} raw interaction likes across ${metrics.videos.toLocaleString()} uploads.`;
 
                 // 2. SMART TRENDS GENERATOR (Algorithmic Mapping based on User Scale)
                 // Determine Predicted Account Tier ranking based on follower thresholds
@@ -897,20 +923,20 @@
                 const soundNames = ["Neon Drift", "Quantum Beats", "HyperDrive Sonic", "Cyber-Synth Wave", "Retro Ambient Fluid"];
                 const hashtags = ["#AIGlow", "#CreatorVelocity", "#TechPulse", "#BioScale", "#AlphaInbound"];
                 
-                document.getElementById('trend-sound-name').innerText = soundNames[seed % soundNames.length];
-                document.getElementById('trend-hashtag').innerText = hashtags[(seed + 2) % hashtags.length];
-                document.getElementById('trend-sound-lift').innerText = `+${((seed * 7) % 60) + 15}%`;
+                if(document.getElementById('trend-sound-name')) document.getElementById('trend-sound-name').innerText = soundNames[seed % soundNames.length];
+                if(document.getElementById('trend-hashtag')) document.getElementById('trend-hashtag').innerText = hashtags[(seed + 2) % hashtags.length];
+                if(document.getElementById('trend-sound-lift')) document.getElementById('trend-sound-lift').innerText = `+${((seed * 7) % 60) + 15}%`;
                 
                 // Generate a realistic AI Recommendation score out of 100 based on user ratio
                 let calculatedScore = (85 + (parseFloat(ratio) * 1.5)).toFixed(1);
                 if (calculatedScore > 100) calculatedScore = "99.2";
-                document.getElementById('trend-ai-score').innerText = calculatedScore;
+                if(document.getElementById('trend-ai-score')) document.getElementById('trend-ai-score').innerText = calculatedScore;
                 
-                document.getElementById('trend-tier').innerText = tier;
-                document.getElementById('trend-reach-val').innerText = reachStr;
+                if(document.getElementById('trend-tier')) document.getElementById('trend-tier').innerText = tier;
+                if(document.getElementById('trend-reach-val')) document.getElementById('trend-reach-val').innerText = reachStr;
 
                 // Sync the Related Pairing Handle Recommendation text dynamically
-                document.getElementById('trend-pair-names').innerText = `${displayHandle} + @NexusPulse`;
+                if(document.getElementById('trend-pair-names')) document.getElementById('trend-pair-names').innerText = `${displayHandle} + @NexusPulse`;
 
                 // Render customized chart bar heights representing algorithmic interaction forecast peaks
                 const barsContainer = document.getElementById('trend-chart-bars');
