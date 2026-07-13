@@ -855,8 +855,37 @@
             });
     });
 }
-    safeStorage.setItem('ib_cached_metrics', JSON.stringify(appState.liveMetrics));
-    bindDataToUI();
+    .catch(function(err) {
+                console.error("Pipeline breakdown details: ", err);
+                
+                // If the live collection fails, check if we have a real previous cache.
+                // If there is no cache, we notify the user instead of leaving silent zeros.
+                var cachedMetrics = safeStorage.getItem('ib_cached_metrics');
+                if (cachedMetrics) {
+                    try {
+                        appState.liveMetrics = JSON.parse(cachedMetrics);
+                    } catch(e) { 
+                        appState.liveMetrics = null; 
+                    }
+                }
+                
+                if (!appState.liveMetrics) {
+                    appState.liveMetrics = {
+                        followers: "Syncing...",
+                        likes: "Syncing...",
+                        videos: "Syncing...",
+                        bio: "Live data pipeline offline. Please check your Cloudflare Worker deployment.",
+                        nickname: username,
+                        avatar: ""
+                    };
+                }
+                
+                bindDataToUI();
+                if (showOverlay && overlay) { overlay.style.display = 'none'; }
+                resolve(appState.liveMetrics);
+            });
+    });
+}
 }
         function processLiveSyncData() {
             triggerHapticFeedback();
