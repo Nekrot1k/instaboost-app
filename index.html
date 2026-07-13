@@ -854,45 +854,19 @@ var backendUrl = 'https://instaboost-app.dargon4ek.workers.dev/?username=' + enc
 }
 
 function setupLocalFallbackMetrics(username, errMsg) {
-    // Absolutely NO random numbers. Hard stop.
+    // 100% REMOVED Math.random(). Fake data is now impossible.
     appState.liveMetrics = {
         followers: 0,
         likes: 0,
         videos: 0,
-        bio: "⚠️ Sync Failed: " + (errMsg || "API Endpoint Blocked"),
-        nickname: "Offline",
+        bio: "❌ Profile Sync Failed. Account might be too new for the Countik database, or API is restricted.",
+        nickname: "Not Found",
         avatar: ""
     };
 
     safeStorage.setItem('ib_cached_metrics', JSON.stringify(appState.liveMetrics));
     bindDataToUI();
 }
-
-        function setupLocalFallbackMetrics(username) {
-            var baseFollowers = Math.floor(Math.random() * 80000) + 15000;
-            var baseLikes = Math.floor(baseFollowers * (Math.random() * 4 + 2));
-            var baseVideos = Math.floor(Math.random() * 140) + 24;
-
-            var lowerName = username.toLowerCase();
-            if (lowerName.includes('khaby')) {
-                baseFollowers = 162500000; baseLikes = 2400000000; baseVideos = 392;
-            } else if (lowerName.includes('mrbeast')) {
-                baseFollowers = 104000000; baseLikes = 980000000; baseVideos = 280;
-            }
-
-            appState.liveMetrics = {
-                followers: baseFollowers,
-                likes: baseLikes,
-                videos: baseVideos,
-                bio: "⚠️ Sandbox Engine Active. Production API origin isolated or rate-limited.",
-                nickname: username,
-                avatar: ""
-            };
-
-            safeStorage.setItem('ib_cached_metrics', JSON.stringify(appState.liveMetrics));
-            bindDataToUI();
-        }
-
         function processLiveSyncData() {
             triggerHapticFeedback();
             var inputEl = document.getElementById('user-handle-input');
