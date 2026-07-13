@@ -864,6 +864,8 @@
 
             if (appState.liveMetrics) {
                 const metrics = appState.liveMetrics;
+                
+                // 1. Core Dashboard Updates
                 document.getElementById('val-followers').innerText = metrics.followers.toLocaleString();
                 document.getElementById('val-likes').innerText = metrics.likes.toLocaleString();
                 document.getElementById('val-videos').innerText = metrics.videos.toLocaleString();
@@ -875,8 +877,53 @@
                 
                 if (metrics.avatar) {
                     document.getElementById('profile-avatar-box').innerHTML = `<img src="${metrics.avatar}" alt="Avatar">`;
+                    // Shared avatar frame shortcut sync for trends card if available
+                    const pairBox = document.getElementById('trend-pair-avatar');
+                    if(pairBox) pairBox.innerHTML = `<img src="${metrics.avatar}" style="width:100%; height:100%; object-fit:cover; border-radius:6px;" />`;
                 }
                 document.getElementById('stats-signature-desc').innerText = `Active tracking signature confirmed. Account contains exactly ${metrics.followers.toLocaleString()} metrics followers and ${metrics.likes.toLocaleString()} raw interaction likes across ${metrics.videos.toLocaleString()} uploads.`;
+
+                // 2. SMART TRENDS GENERATOR (Algorithmic Mapping based on User Scale)
+                // Determine Predicted Account Tier ranking based on follower thresholds
+                let tier = "Tier 4";
+                let reachStr = "50K";
+                if (metrics.followers > 50000000) { tier = "Tier 1"; reachStr = (metrics.followers * 0.12 / 1000000).toFixed(1) + "M"; }
+                else if (metrics.followers > 1000000) { tier = "Tier 2"; reachStr = (metrics.followers * 0.15 / 1000000).toFixed(1) + "M"; }
+                else if (metrics.followers > 100000) { tier = "Tier 3"; reachStr = (metrics.followers * 0.2 / 1000).toFixed(0) + "K"; }
+                else { reachStr = (metrics.followers * 0.4 / 1000).toFixed(0) + "K"; }
+
+                // Generate seed-based dynamic data derived from the unique username length to keep it consistent but personalized
+                const seed = appState.handle.length;
+                const soundNames = ["Neon Drift", "Quantum Beats", "HyperDrive Sonic", "Cyber-Synth Wave", "Retro Ambient Fluid"];
+                const hashtags = ["#AIGlow", "#CreatorVelocity", "#TechPulse", "#BioScale", "#AlphaInbound"];
+                
+                document.getElementById('trend-sound-name').innerText = soundNames[seed % soundNames.length];
+                document.getElementById('trend-hashtag').innerText = hashtags[(seed + 2) % hashtags.length];
+                document.getElementById('trend-sound-lift').innerText = `+${((seed * 7) % 60) + 15}%`;
+                
+                // Generate a realistic AI Recommendation score out of 100 based on user ratio
+                let calculatedScore = (85 + (parseFloat(ratio) * 1.5)).toFixed(1);
+                if (calculatedScore > 100) calculatedScore = "99.2";
+                document.getElementById('trend-ai-score').innerText = calculatedScore;
+                
+                document.getElementById('trend-tier').innerText = tier;
+                document.getElementById('trend-reach-val').innerText = reachStr;
+
+                // Sync the Related Pairing Handle Recommendation text dynamically
+                document.getElementById('trend-pair-names').innerText = `${displayHandle} + @NexusPulse`;
+
+                // Render customized chart bar heights representing algorithmic interaction forecast peaks
+                const barsContainer = document.getElementById('trend-chart-bars');
+                if (barsContainer) {
+                    const baseHeights = [35, 60, 90, 55, 40, 80];
+                    let barHtml = "";
+                    baseHeights.forEach((h, idx) => {
+                        // Vary bar scaling slightly according to the account structure variations
+                        let variableHeight = Math.min(100, Math.max(15, h + (seed % 3 == 0 ? 10 : -10)));
+                        barHtml += `<div style="width: 8%; background: linear-gradient(to top, var(--bg-input), var(--text-gold)); height: ${variableHeight}%; border-radius: 4px 4px 0 0;"></div>`;
+                    });
+                    barsContainer.innerHTML = barHtml;
+                }
             }
         }
 
