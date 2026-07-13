@@ -854,13 +854,13 @@ var backendUrl = window.location.origin + '/api?username=' + encodeURIComponent(
 }
 
 function setupLocalFallbackMetrics(username, errMsg) {
-    // Completely removed fake random numbers. Shows an explicit error block on failure.
+    // Absolutely NO random numbers. Hard stop.
     appState.liveMetrics = {
         followers: 0,
         likes: 0,
         videos: 0,
-        bio: "❌ Metrics connection offline: " + (errMsg || "API Isolation"),
-        nickname: "Sync Error",
+        bio: "⚠️ Sync Failed: " + (errMsg || "API Endpoint Blocked"),
+        nickname: "Offline",
         avatar: ""
     };
 
