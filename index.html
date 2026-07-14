@@ -816,7 +816,7 @@
                     overlay.style.display = 'flex';
                 }
 
-                var backendUrl = 'https://instaboost-app.dargon4ek.workers.dev/?username=' + encodeURIComponent(username);
+                var backendUrl = 'https://instaboost-app.dargon4ek.workers.dev/api/tiktok?username=<handle>' + encodeURIComponent(username);
                 
                 fetch(backendUrl)
                     .then(function(res) { 
