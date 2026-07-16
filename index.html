@@ -166,6 +166,12 @@
   .tab-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;color:var(--outline);font-size:9px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;}
   .tab-item.active{color:var(--primary);}
   .tab-item .ti-icon{font-size:19px;line-height:1;}
+
+  .cart-badge{position:absolute;top:-6px;right:-8px;background:var(--primary);color:var(--on-primary);
+    font-size:9px;font-weight:700;min-width:15px;height:15px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;padding:0 2px;}
+  .icon-btn{position:relative;}
+  .empty-state{padding:40px 0;text-align:center;font-size:13px;color:var(--on-surface-variant);}
 </style>
 </head>
 <body>
@@ -173,7 +179,7 @@
 <div class="app-header" id="main-header">
   <button class="icon-btn">☰</button>
   <span class="brand-logo">GRAND</span>
-  <button class="icon-btn">🛍</button>
+  <button class="icon-btn">🛍<span class="cart-badge" id="cart-badge" style="display:none;">0</span></button>
 </div>
 
 <div class="app-view active-view" id="view-home">
@@ -275,15 +281,15 @@
 
 <div class="app-view" id="view-profile">
   <div class="profile-head">
-    <div class="avatar-ring" style="background-image:url('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&q=80')"></div>
-    <h2>Олександр Іванов</h2>
-    <div class="handle">@ALEX_GRAND</div>
+    <div class="avatar-ring" id="profile-avatar" style="background-image:url('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&q=80')"></div>
+    <h2 id="profile-name">Гість</h2>
+    <div class="handle" id="profile-handle"></div>
   </div>
   <div class="status-card">
     <div>
       <div class="eyebrow" style="margin-bottom:4px;">Ваш аккаунт</div>
       <div style="font-size:13px;color:var(--on-surface-variant);">Статус підписки:</div>
-      <div class="tier">Premium</div>
+      <div class="tier" id="profile-tier">Standard</div>
     </div>
     <div class="status-icon">★</div>
   </div>
@@ -310,27 +316,23 @@
     <div class="pd-name" id="pd-name"></div>
     <div class="pd-price" id="pd-price"></div>
     <div class="pd-desc" id="pd-desc"></div>
-    <div class="pd-quote">«Монументальна форма зустрічається з утилітарною функцією.»</div>
+    <div class="pd-quote" id="pd-quote" style="display:none;"></div>
 
-    <div class="opt-label">Колір</div>
-    <div class="swatch-row"><div class="swatch" style="background:#f2f2f2;"></div><span style="font-size:13px;">Obsidian Black</span></div>
-
-    <div class="opt-label" style="display:flex;justify-content:space-between;">
-      <span>Розмір</span><span style="text-decoration:underline;text-underline-offset:3px;">Таблиця розмірів</span>
-    </div>
-    <div class="size-row">
-      <div class="size-opt" onclick="selectSize(this)">S</div>
-      <div class="size-opt selected" onclick="selectSize(this)">M</div>
-      <div class="size-opt" onclick="selectSize(this)">L</div>
-      <div class="size-opt" onclick="selectSize(this)">XL</div>
+    <div id="pd-color-block">
+      <div class="opt-label">Колір</div>
+      <div class="swatch-row" id="pd-colors"></div>
     </div>
 
-    <div class="care-grid">
-      <div class="care-card"><span class="ci">📐</span><div class="ct">Крій</div><div class="cd">Анатомічний силует з артикульованими рукавами.</div></div>
-      <div class="care-card"><span class="ci">💧</span><div class="ct">Захист</div><div class="cd">DWR покриття та проклеєні шви.</div></div>
+    <div id="pd-size-block">
+      <div class="opt-label" style="display:flex;justify-content:space-between;">
+        <span>Розмір</span><span style="text-decoration:underline;text-underline-offset:3px;">Таблиця розмірів</span>
+      </div>
+      <div class="size-row" id="pd-sizes"></div>
     </div>
+
+    <div class="care-grid" id="pd-care"></div>
   </div>
-  <div class="pd-cta"><button class="btn-solid">Додати у кошик 🛒</button></div>
+  <div class="pd-cta"><button class="btn-solid" id="pd-add-btn" onclick="addCurrentProductToCart()">Додати у кошик 🛒</button></div>
 </div>
 
 <div class="nav-tab-bar" id="bottom-nav">
@@ -344,50 +346,50 @@
 var tg = window.Telegram ? window.Telegram.WebApp : null;
 try { if (tg) { tg.ready(); tg.expand(); } } catch(e){}
 
-var PRODUCTS = [
-  {id:'blazer', cat:'Outerwear / Grand Edition', name:'Structured Blazer', mat:'Wool / Silk Blend', price:'24,500 ₴', badge:'Limited',
-   img:'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600&q=80',
-   desc:'Втілення архітектурної точності та сучасних технологій. Створений для тих, хто цінує структурну цілісність та функціональний мінімалізм.'},
-  {id:'pant', cat:'Bottoms / Structural Line', name:'Architect Pant', mat:'Raw Cotton / Charcoal', price:'18,200 ₴',
-   img:'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=600&q=80',
-   desc:'Прямий силует із заниженою посадкою. Виготовлений з щільної бавовни для чіткої архітектурної драпіровки.'},
-  {id:'gilet', cat:'Vests / Utility Core', name:'Vector Gilet', mat:'Tech Nylon / Thermal', price:'15,900 ₴', badge:'New Season',
-   img:'https://images.unsplash.com/photo-1544923246-77307dd654cb?w=600&q=80',
-   desc:'Технічний жилет з множинними кишенями для повсякденного утилітарного стилю.'},
-  {id:'knit', cat:'Knitwear / Obsidian Lab', name:'Sculpted Knit', mat:'Merino / Cashmere', price:'12,400 ₴',
-   img:'https://images.unsplash.com/photo-1576871337622-98d48d1cf531?w=600&q=80',
-   desc:'Обємний светр із суміші мериносу та кашеміру. Мяка структура з чіткими лініями плеча.'},
-  {id:'trench', cat:'Технічний верхній одяг', name:'Tech Trench II', mat:'Outerwear / Grand Edition', price:'18,500 ₴', badge:'New Arrival',
-   img:'https://images.unsplash.com/photo-1520975916090-3105956dac38?w=700&q=80',
-   desc:'Втілення архітектурної точності та сучасних технологій. Tech Trench II створений для тих, хто цінує структурну цілісність та функціональний мінімалізм. Виготовлений з тришарового композитного нейлону, що забезпечує абсолютний захист від вітру та вологи при збереженні повітропроникності.'},
-  {id:'clutch', cat:'Accessories / Titanium Series', name:'Titanium Clutch', mat:'Accessories', price:'890.00 $',
-   img:'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600&q=80',
-   desc:'Мінімалістичний клатч з титановою рамкою та магнітним замком.'},
-  {id:'pullover', cat:'Knitwear / Obsidian Lab', name:'Carbon Pullover', mat:'Bottoms / Structural Line', price:'450.00 $',
-   img:'https://images.unsplash.com/photo-1614179689702-355944cd0918?w=600&q=80',
-   desc:'Легкий пуловер із карбоновою фактурою пряжі.'},
-  {id:'mono', cat:'Eyewear / Brutalist Frame', name:'Mono Vision X', mat:'Eyewear', price:'380.00 $',
-   img:'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=600&q=80',
-   desc:'Скульптурна оправа з моноблочною лінзою.'},
-  {id:'scarf', cat:'Accessories / Ethereal Series', name:'Void Scarf', mat:'Accessories', price:'210.00 $',
-   img:'https://images.unsplash.com/photo-1520903920243-5b0205a7a9a1?w=600&q=80',
-   desc:'Невагомий шарф з мерсеризованої вовни.'},
-  {id:'boot', cat:'Footwear / Brutalist Walk', name:'Titan Boot', mat:'Footwear', price:'950.00 $',
-   img:'https://images.unsplash.com/photo-1608256246200-53e635b5b65f?w=600&q=80',
-   desc:'Масивний черевик з протекторною підошвою та посиленим носком.'},
-  {id:'derbies', cat:'Footwear', name:'Mono Derbies', mat:'Leather', price:'12,200 ₴',
-   img:'https://images.unsplash.com/photo-1614252369475-531eba835eb1?w=600&q=80',
-   desc:'Класичні дербі з гладкої телячої шкіри на мінімалістичній підошві.'},
-  {id:'carryall', cat:'Accessories', name:'Box Carryall', mat:'Leather', price:'24,000 ₴',
-   img:'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600&q=80',
-   desc:'Структурована сумка з жорсткими гранями та знімним ременем.'}
-];
+// ---- API client -------------------------------------------------------
+function tgInitData(){
+  try { return (tg && tg.initData) || ''; } catch(e){ return ''; }
+}
+function api(path, opts){
+  opts = opts || {};
+  opts.headers = Object.assign({'Content-Type':'application/json','X-Telegram-Init-Data': tgInitData()}, opts.headers||{});
+  return fetch(path, opts).then(function(res){
+    if(!res.ok){ return res.json().catch(function(){return {};}).then(function(e){ throw new Error(e.error||res.statusText); }); }
+    return res.status===204 ? null : res.json();
+  });
+}
+function formatPrice(cents, currency){
+  var amount = cents/100;
+  if(currency==='UAH') return amount.toLocaleString('uk-UA',{maximumFractionDigits:0})+' ₴';
+  return '$'+amount.toFixed(2);
+}
 
-var FAVORITE_IDS = ['blazer','derbies','carryall'];
-var NEW_IDS = ['trench','clutch','pant','knit','mono','gilet','scarf','boot'];
-var CATEGORY_IDS = ['blazer','pant','gilet','knit'];
+// ---- App state ----------------------------------------------------------
+var PRODUCTS = [];        // flat list, shaped for rendering (see shapeProduct)
+var CATEGORIES = [];
+var FAVORITE_SLUGS = [];  // set-like array of product slugs
+var CART = [];            // [{cartItemId, size, color, qty, product:{...}}]
+var ME = null;
+
+function shapeProduct(p){
+  return {
+    id: p.slug,
+    cat: p.subtitle || p.category_name || '',
+    name: p.name,
+    mat: p.material || '',
+    price: formatPrice(p.price_cents, p.currency),
+    badge: p.badge,
+    img: p.image_url,
+    desc: p.description || '',
+    quote: p.quote || '',
+    sizes: p.sizes || [],
+    colors: p.colors || [],
+    care: p.care || []
+  };
+}
 
 function findP(id){ return PRODUCTS.filter(function(p){return p.id===id;})[0]; }
+function isFavorite(id){ return FAVORITE_SLUGS.indexOf(id) !== -1; }
 
 function pcardHTML(p){
   return '<div class="pcard" onclick="openProduct(\''+p.id+'\')">'+
@@ -403,7 +405,7 @@ function pcardHTML(p){
 
 function pcardWideHTML(p, removable){
   return '<div class="pcard-wide">'+
-    (removable?'<div class="remove-x" onclick="event.stopPropagation()">✕</div>':'')+
+    (removable?'<div class="remove-x" onclick="event.stopPropagation();toggleFavorite(\''+p.id+'\')">✕</div>':'')+
     '<div class="pimg" style="background-image:url(\''+p.img+'\')" onclick="openProduct(\''+p.id+'\')">'+
       (p.badge?'<div class="badge">'+p.badge+'</div>':'')+
     '</div>'+
@@ -411,7 +413,7 @@ function pcardWideHTML(p, removable){
       '<div><div class="pcat">'+p.cat+'</div><div class="pname">'+p.name+'</div>'+(removable?'':'<div class="pmat">'+p.mat+'</div>')+'</div>'+
       '<div class="pprice">'+p.price+'</div>'+
     '</div>'+
-    (removable?'<button class="add-cart-btn">У кошик</button>':'')+
+    (removable?'<button class="add-cart-btn" onclick="event.stopPropagation();quickAddToCart(\''+p.id+'\')">У кошик</button>':'')+
   '</div>';
 }
 
@@ -423,12 +425,52 @@ function hcardHTML(p){
   '</div>';
 }
 
-document.getElementById('category-list').innerHTML = CATEGORY_IDS.map(function(id){return pcardWideHTML(findP(id), false);}).join('');
-document.getElementById('new-grid').innerHTML = NEW_IDS.map(function(id){return pcardHTML(findP(id));}).join('');
-document.getElementById('home-new-grid').innerHTML = NEW_IDS.slice(0,4).map(function(id){return pcardHTML(findP(id));}).join('');
-document.getElementById('favorites-list').innerHTML = FAVORITE_IDS.map(function(id){return pcardWideHTML(findP(id), true);}).join('');
-document.getElementById('home-fav-scroll').innerHTML = FAVORITE_IDS.map(function(id){return hcardHTML(findP(id));}).join('');
+// ---- Renderers ------------------------------------------------------------
+function renderHome(){
+  var newest = PRODUCTS.filter(function(p){return p.badge || true;}).slice(0,4);
+  document.getElementById('home-new-grid').innerHTML = newest.map(pcardHTML).join('');
+  var favs = PRODUCTS.filter(function(p){return isFavorite(p.id);});
+  document.getElementById('home-fav-scroll').innerHTML = favs.length
+    ? favs.map(hcardHTML).join('')
+    : '<div class="empty-state">Ще немає обраного</div>';
+}
 
+function renderNewGrid(){
+  var list = PRODUCTS.filter(function(p){return p._isNew;});
+  document.getElementById('new-grid').innerHTML = list.map(pcardHTML).join('');
+}
+
+function renderCategoryList(){
+  var list = PRODUCTS.filter(function(p){return p._categorySlug === 'odyag';});
+  document.getElementById('category-list').innerHTML = list.map(function(p){return pcardWideHTML(p, false);}).join('');
+}
+
+function renderFavorites(){
+  var favs = PRODUCTS.filter(function(p){return isFavorite(p.id);});
+  document.getElementById('favorites-list').innerHTML = favs.length
+    ? favs.map(function(p){return pcardWideHTML(p, true);}).join('')
+    : '<div class="empty-state">Ще немає обраного. Додайте товари, що вам сподобались.</div>';
+}
+
+function renderCartBadge(){
+  var count = CART.reduce(function(sum, item){return sum + item.qty;}, 0);
+  var el = document.getElementById('cart-badge');
+  el.innerText = count;
+  el.style.display = count > 0 ? 'flex' : 'none';
+}
+
+function renderProfile(){
+  var tgUser = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
+  var name = ME ? [ME.firstName, ME.lastName].filter(Boolean).join(' ') : (tgUser ? [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ') : 'Гість');
+  var handle = ME && ME.username ? '@'+ME.username.toUpperCase() : (tgUser && tgUser.username ? '@'+tgUser.username.toUpperCase() : '');
+  var photo = (ME && ME.photoUrl) || (tgUser && tgUser.photo_url);
+  document.getElementById('profile-name').innerText = name || 'Гість';
+  document.getElementById('profile-handle').innerText = handle;
+  document.getElementById('profile-tier').innerText = ME && ME.isPremium ? 'Premium' : 'Standard';
+  if(photo) document.getElementById('profile-avatar').style.backgroundImage = "url('"+photo+"')";
+}
+
+// ---- Navigation -------------------------------------------------------
 function switchTab(tabId, el){
   document.querySelectorAll('.app-view').forEach(function(v){v.classList.remove('active-view');});
   document.querySelectorAll('.tab-item').forEach(function(b){b.classList.remove('active');});
@@ -438,6 +480,8 @@ function switchTab(tabId, el){
   document.getElementById('bottom-nav').style.display = 'flex';
   document.getElementById('main-header').style.display = 'flex';
   window.scrollTo(0,0);
+  if(tabId==='favorites') renderFavorites();
+  if(tabId==='profile') renderProfile();
 }
 
 function openList(which){
@@ -447,15 +491,47 @@ function openList(which){
   document.getElementById('bottom-nav').style.display = 'flex';
   document.getElementById('main-header').style.display = 'flex';
   window.scrollTo(0,0);
+  if(which==='new') renderNewGrid();
+  if(which==='category') renderCategoryList();
 }
+
+var currentProductId = null;
 
 function openProduct(id){
   var p = findP(id);
+  if(!p) return;
+  currentProductId = id;
+
   document.getElementById('pd-hero').style.backgroundImage = "url('"+p.img+"')";
   document.getElementById('pd-cat').innerText = p.cat;
   document.getElementById('pd-name').innerText = p.name;
   document.getElementById('pd-price').innerText = p.price;
   document.getElementById('pd-desc').innerText = p.desc;
+
+  var quoteEl = document.getElementById('pd-quote');
+  if(p.quote){ quoteEl.innerText = '«'+p.quote+'»'; quoteEl.style.display = 'block'; }
+  else { quoteEl.style.display = 'none'; }
+
+  var colorBlock = document.getElementById('pd-color-block');
+  if(p.colors && p.colors.length){
+    colorBlock.style.display = 'block';
+    document.getElementById('pd-colors').innerHTML = p.colors.map(function(c,i){
+      return '<div class="swatch" style="background:'+c.hex+';'+(i===0?'outline:2px solid var(--primary);outline-offset:2px;':'')+'"></div><span style="font-size:13px;">'+c.name+'</span>';
+    }).join('');
+  } else { colorBlock.style.display = 'none'; }
+
+  var sizeBlock = document.getElementById('pd-size-block');
+  if(p.sizes && p.sizes.length){
+    sizeBlock.style.display = 'block';
+    document.getElementById('pd-sizes').innerHTML = p.sizes.map(function(s,i){
+      return '<div class="size-opt'+(i===0?' selected':'')+'" data-size="'+s.size+'" onclick="selectSize(this)">'+s.size+'</div>';
+    }).join('');
+  } else { sizeBlock.style.display = 'none'; }
+
+  document.getElementById('pd-care').innerHTML = (p.care||[]).map(function(c){
+    return '<div class="care-card"><span class="ci">'+(c.icon||'')+'</span><div class="ct">'+c.title+'</div><div class="cd">'+(c.description||'')+'</div></div>';
+  }).join('');
+
   document.querySelectorAll('.app-view').forEach(function(v){v.classList.remove('active-view');});
   document.getElementById('view-product').classList.add('active-view');
   document.getElementById('bottom-nav').style.display = 'none';
@@ -471,6 +547,93 @@ function selectSize(el){
   document.querySelectorAll('.size-opt').forEach(function(s){s.classList.remove('selected');});
   el.classList.add('selected');
 }
+
+// ---- Favorites / Cart actions ------------------------------------------
+function toggleFavorite(id){
+  var wasFav = isFavorite(id);
+  if(wasFav){ FAVORITE_SLUGS = FAVORITE_SLUGS.filter(function(s){return s!==id;}); }
+  else { FAVORITE_SLUGS.push(id); }
+  renderHome(); renderFavorites();
+
+  var req = wasFav ? api('/api/favorites/'+id, {method:'DELETE'}) : api('/api/favorites/'+id, {method:'POST'});
+  req.catch(function(err){
+    // revert on failure
+    if(wasFav){ FAVORITE_SLUGS.push(id); } else { FAVORITE_SLUGS = FAVORITE_SLUGS.filter(function(s){return s!==id;}); }
+    renderHome(); renderFavorites();
+    alert('Не вдалося оновити обране: '+err.message);
+  });
+}
+
+function refreshCart(){
+  return api('/api/cart').then(function(items){
+    CART = items;
+    renderCartBadge();
+  }).catch(function(){ /* not authenticated yet — ignore */ });
+}
+
+function quickAddToCart(id){
+  api('/api/cart', {method:'POST', body: JSON.stringify({productSlug:id, qty:1})})
+    .then(refreshCart)
+    .catch(function(err){ alert('Не вдалося додати у кошик: '+err.message); });
+}
+
+function addCurrentProductToCart(){
+  if(!currentProductId) return;
+  var sizeEl = document.querySelector('#pd-sizes .size-opt.selected');
+  var size = sizeEl ? sizeEl.getAttribute('data-size') : null;
+  var p = findP(currentProductId);
+  var color = p && p.colors && p.colors.length ? p.colors[0].name : null;
+  api('/api/cart', {method:'POST', body: JSON.stringify({productSlug:currentProductId, size:size, color:color, qty:1})})
+    .then(refreshCart)
+    .catch(function(err){ alert('Не вдалося додати у кошик: '+err.message); });
+}
+
+// ---- Boot ---------------------------------------------------------------
+function loadProducts(){
+  return api('/api/products?limit=100').then(function(res){
+    PRODUCTS = res.products.map(function(p){
+      var shaped = shapeProduct(p);
+      shaped._isNew = !!p.is_new;
+      shaped._categorySlug = p.category_id ? null : null; // filled below via categories join
+      return shaped;
+    });
+    // category slug isn't in the flat product row from /api/products (only in /api/products/:slug),
+    // so also fetch categories once and map by matching subtitle-less lookup via a dedicated call:
+    return api('/api/categories');
+  }).then(function(cats){
+    CATEGORIES = cats;
+  });
+}
+
+function loadCategoryTagging(){
+  // fetch the "Одяг" category's product slugs specifically for the category-listing view
+  return api('/api/products?category=odyag&limit=100').then(function(res){
+    var odyagSlugs = res.products.map(function(p){return p.slug;});
+    PRODUCTS.forEach(function(p){ p._categorySlug = odyagSlugs.indexOf(p.id) !== -1 ? 'odyag' : null; });
+  });
+}
+
+function loadMe(){
+  return api('/api/me').then(function(res){
+    ME = res.user;
+    FAVORITE_SLUGS = res.favoriteSlugs || [];
+  }).catch(function(){
+    ME = null; FAVORITE_SLUGS = [];
+  });
+}
+
+Promise.all([loadProducts().then(loadCategoryTagging), loadMe()])
+  .then(refreshCart)
+  .then(function(){
+    renderHome();
+    renderNewGrid();
+    renderCategoryList();
+    renderFavorites();
+    renderProfile();
+  })
+  .catch(function(err){
+    console.error('Failed to load app data', err);
+  });
 </script>
 </body>
 </html>
