@@ -1,1018 +1,476 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uk">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Instaboost - Premium Analytics Workspace</title>
-    <!-- Telegram Web App Script Link -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        /* --- DESIGN SYSTEM STYLING TOKENS --- */
-        :root {
-            --bg-dark: #070708;
-            --bg-card: #0e0f12;
-            --bg-input: #14161b;
-            --accent-orange: #ff7a00;
-            --accent-gradient: linear-gradient(135deg, #ff7a00 0%, #ff4d00 100%);
-            --text-main: #ffffff;
-            --text-muted: #7e8492;
-            --text-gold: #e2b08a;
-            --border-color: #1a1d24;
-            --glow-color: rgba(255, 122, 0, 0.15);
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>GRAND — Editorial</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --surface:#131313;
+    --surface-container-lowest:#0e0e0e;
+    --surface-container-low:#1b1b1b;
+    --surface-container:#1f1f1f;
+    --surface-container-high:#2a2a2a;
+    --on-surface:#e2e2e2;
+    --on-surface-variant:#c4c7c8;
+    --outline:#8e9192;
+    --outline-variant:#444748;
+    --primary:#ffffff;
+    --on-primary:#2f3131;
+    --secondary:#c8c6c5;
+    --background:#131313;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;font-family:'Montserrat',-apple-system,sans-serif;-webkit-font-smoothing:antialiased;}
+  html,body{background:var(--background);color:var(--on-surface);}
+  body{min-height:100vh;overflow-x:hidden;padding-bottom:76px;}
+  a{color:inherit;text-decoration:none;}
+  button{cursor:pointer;background:none;border:none;color:inherit;font-family:inherit;}
+  input{font-family:inherit;color:inherit;}
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            -webkit-font-smoothing: antialiased;
-        }
+  .eyebrow{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.14em;color:var(--outline);}
 
-        body {
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            min-height: 100vh;
-            overflow-x: hidden;
-            padding-bottom: 75px;
-        }
+  .app-header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:18px 16px;position:sticky;top:0;z-index:900;
+    background:var(--background);border-bottom:1px solid var(--outline-variant);
+  }
+  .brand-logo{font-size:20px;font-weight:800;letter-spacing:0.28em;text-transform:uppercase;color:var(--primary);}
+  .icon-btn{font-size:18px;color:var(--primary);width:24px;height:24px;display:flex;align-items:center;justify-content:center;}
 
-        /* --- EMERGENCY ERROR BOX --- */
-        #emergency-crash-log {
-            display: none;
-            background: #2a0808;
-            color: #ff8888;
-            padding: 15px;
-            font-family: monospace;
-            font-size: 12px;
-            border: 2px solid #ff3333;
-            margin: 10px;
-            border-radius: 8px;
-            white-space: pre-wrap;
-            word-break: break-all;
-            z-index: 99999;
-            position: relative;
-        }
+  .app-view{display:none;padding:20px 16px 8px;}
+  .app-view.active-view{display:block;}
 
-        /* --- STICKY APP NAVBAR CORNER HEADER --- */
-        .app-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px;
-            background-color: var(--bg-dark);
-            border-bottom: 1px solid var(--border-color);
-            position: sticky;
-            top: 0;
-            z-index: 900;
-        }
+  h1.page-title{font-size:32px;font-weight:800;letter-spacing:-0.02em;line-height:1.1;text-transform:uppercase;margin-bottom:4px;}
+  .page-sub{font-size:13px;color:var(--on-surface-variant);line-height:1.5;margin-bottom:20px;}
 
-        .brand-logo {
-            font-size: 22px;
-            font-weight: 800;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            background: linear-gradient(180deg, #ffffff 0%, var(--text-gold) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
+  .rule{height:1px;background:var(--outline-variant);border:none;margin:16px 0;}
 
-        .header-actions {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
+  .cat-tile{
+    position:relative;height:220px;margin-bottom:14px;overflow:hidden;
+    background-size:cover;background-position:center;
+    border:1px solid var(--outline-variant);
+    display:flex;flex-direction:column;justify-content:flex-end;padding:16px;
+  }
+  .cat-tile::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 40%,rgba(0,0,0,0.75) 100%);}
+  .cat-tile .cat-num{position:relative;z-index:1;font-size:11px;font-weight:700;letter-spacing:0.1em;color:var(--secondary);margin-bottom:6px;}
+  .cat-tile .cat-name{position:relative;z-index:1;font-size:24px;font-weight:800;text-transform:uppercase;letter-spacing:-0.01em;}
+  .cat-tile .cat-link{position:relative;z-index:1;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-top:6px;text-decoration:underline;text-underline-offset:3px;}
 
-        .icon-btn {
-            background: none;
-            border: none;
-            color: var(--text-main);
-            font-size: 18px;
-            cursor: pointer;
-        }
+  .season-banner{border:1px solid var(--outline-variant);padding:20px;margin-top:8px;}
+  .season-banner p{font-size:13px;color:var(--on-surface-variant);margin:8px 0 16px;line-height:1.5;}
+  .btn-outline{border:1px solid var(--primary);padding:12px 18px;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;display:block;text-align:center;width:100%;}
+  .btn-outline:active{background:var(--primary);color:var(--on-primary);}
+  .btn-solid{background:var(--primary);color:var(--on-primary);padding:14px;font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;}
 
-        /* --- APPLICATION LAYOUT FRAMES --- */
-        .app-view {
-            display: none;
-            padding: 20px 16px;
-            animation: viewFadeIn 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .pcard{border:1px solid var(--outline-variant);background:var(--surface-container-low);}
+  .pcard .pimg{width:100%;aspect-ratio:3/4;background-size:cover;background-position:center;position:relative;}
+  .pcard .badge{position:absolute;top:8px;left:8px;background:var(--primary);color:var(--on-primary);font-size:9px;font-weight:700;letter-spacing:0.08em;padding:4px 7px;}
+  .pcard .pinfo{padding:10px;}
+  .pcard .pcat{font-size:9px;color:var(--outline);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;}
+  .pcard .pname{font-size:13px;font-weight:700;text-transform:uppercase;line-height:1.25;margin-bottom:6px;}
+  .pcard .pprice{font-size:13px;font-weight:600;}
 
-        .app-view.active-view {
-            display: block;
-        }
+  .pcard-wide{border-bottom:1px solid var(--outline-variant);padding-bottom:20px;margin-bottom:20px;position:relative;}
+  .pcard-wide .pimg{width:100%;aspect-ratio:3/4;background-size:cover;background-position:center;position:relative;margin-bottom:14px;}
+  .pcard-wide .badge{position:absolute;top:10px;left:10px;background:var(--primary);color:var(--on-primary);font-size:9px;font-weight:700;letter-spacing:0.08em;padding:5px 8px;}
+  .pcard-wide .prow{display:flex;justify-content:space-between;align-items:flex-start;}
+  .pcard-wide .pcat{font-size:10px;color:var(--outline);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;}
+  .pcard-wide .pname{font-size:17px;font-weight:700;text-transform:uppercase;margin-bottom:4px;}
+  .pcard-wide .pmat{font-size:12px;color:var(--on-surface-variant);}
+  .pcard-wide .pprice{font-size:16px;font-weight:600;white-space:nowrap;}
+  .remove-x{position:absolute;top:10px;right:10px;width:26px;height:26px;background:rgba(19,19,19,0.7);border:1px solid var(--outline-variant);display:flex;align-items:center;justify-content:center;font-size:14px;z-index:2;}
+  .add-cart-btn{margin-top:12px;background:var(--primary);color:var(--on-primary);border:none;padding:10px 16px;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;width:100%;}
 
-        @keyframes viewFadeIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+  .filter-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+  .sort-btn{font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;display:flex;align-items:center;gap:6px;}
+  .count-txt{font-size:11px;color:var(--outline);text-transform:uppercase;letter-spacing:0.06em;}
+  .tab-scroll{display:flex;gap:22px;overflow-x:auto;padding-bottom:14px;margin-bottom:16px;border-bottom:1px solid var(--outline-variant);}
+  .filter-tab{font-size:12px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--outline);white-space:nowrap;padding-bottom:14px;margin-bottom:-15px;border-bottom:2px solid transparent;}
+  .filter-tab.active{color:var(--primary);border-bottom-color:var(--primary);}
 
-        h1 {
-            font-size: 26px;
-            font-weight: 700;
-            margin-bottom: 6px;
-            letter-spacing: -0.5px;
-        }
+  .load-more{border:1px solid var(--primary);padding:14px;width:100%;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;text-align:center;margin:10px 0 18px;}
+  .page-dots{display:flex;align-items:center;justify-content:center;gap:8px;font-size:11px;color:var(--outline);letter-spacing:0.06em;margin-bottom:10px;}
+  .page-dots .dash{width:24px;height:1px;background:var(--outline-variant);}
 
-        .view-subtitle {
-            color: var(--text-muted);
-            font-size: 13px;
-            margin-bottom: 24px;
-            line-height: 1.4;
-        }
+  .search-input-wrap{border:2px solid var(--primary);display:flex;align-items:center;padding:14px 16px;margin-bottom:26px;}
+  .search-input-wrap input{background:none;border:none;outline:none;flex:1;font-size:14px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:var(--primary);}
+  .search-input-wrap input::placeholder{color:var(--outline);}
+  .search-input-wrap .clear-x{color:var(--outline);font-size:16px;}
+  .recent-item{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid var(--outline-variant);font-size:15px;}
+  .recent-item .arrow{color:var(--outline);}
+  .clear-all{margin:14px 0 24px;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--outline);text-decoration:underline;text-underline-offset:3px;}
+  .tag-grid{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:24px;}
+  .tag-chip{border:1px solid var(--outline-variant);padding:12px 16px;font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;}
+  .new-collection-banner{border:1px solid var(--outline-variant);background:var(--surface-container-low);padding:22px;}
+  .new-collection-banner .icon{width:34px;height:34px;border:1px solid var(--outline);border-radius:50%;margin-bottom:14px;display:flex;align-items:center;justify-content:center;}
+  .new-collection-banner h3{font-size:20px;font-weight:800;text-transform:uppercase;margin-bottom:8px;}
+  .new-collection-banner p{font-size:13px;color:var(--on-surface-variant);line-height:1.5;margin-bottom:14px;}
+  .new-collection-banner a{font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;text-decoration:underline;text-underline-offset:3px;}
 
-        /* --- PREMIUM CARDS & METRIC PATTERNS --- */
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            margin-bottom: 20px;
-        }
+  .hscroll{display:flex;gap:12px;overflow-x:auto;padding-bottom:6px;}
+  .hcard{flex:0 0 104px;}
+  .hcard .himg{width:104px;height:104px;background-size:cover;background-position:center;border:1px solid var(--outline-variant);margin-bottom:8px;}
+  .hcard .hname{font-size:11px;font-weight:600;margin-bottom:2px;}
+  .hcard .hprice{font-size:11px;color:var(--on-surface-variant);}
 
-        .metric-card {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 16px;
-            position: relative;
-        }
+  .capsule-banner{position:relative;height:180px;background-size:cover;background-position:center;border:1px solid var(--outline-variant);margin-bottom:32px;display:flex;flex-direction:column;justify-content:flex-end;padding:18px;}
+  .capsule-banner::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 30%,rgba(0,0,0,0.7) 100%);}
+  .capsule-banner .cb-eyebrow{position:relative;z-index:1;font-size:10px;font-weight:700;letter-spacing:0.1em;color:var(--secondary);margin-bottom:6px;}
+  .capsule-banner h3{position:relative;z-index:1;font-size:22px;font-weight:800;text-transform:uppercase;margin-bottom:12px;}
+  .capsule-banner .btn-solid{position:relative;z-index:1;width:auto;padding:11px 22px;}
 
-        .metric-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: var(--text-muted);
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 12px;
-        }
+  .profile-head{display:flex;flex-direction:column;align-items:center;padding:10px 0 20px;}
+  .avatar-ring{width:96px;height:96px;border-radius:50%;border:1px solid var(--outline-variant);background-size:cover;background-position:center;margin-bottom:16px;}
+  .profile-head h2{font-size:24px;font-weight:800;margin-bottom:4px;}
+  .profile-head .handle{font-size:13px;color:var(--outline);}
+  .status-card{background:var(--surface-container-low);border:1px solid var(--outline-variant);padding:18px;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .status-card .tier{font-size:16px;font-weight:700;margin-top:4px;font-style:italic;}
+  .status-icon{width:44px;height:44px;background:var(--primary);color:var(--on-primary);display:flex;align-items:center;justify-content:center;font-size:18px;}
+  .menu-list{margin-top:12px;}
+  .menu-item{display:flex;align-items:center;gap:14px;padding:18px 0;border-bottom:1px solid var(--outline-variant);font-size:15px;}
+  .menu-item .mi-icon{width:20px;text-align:center;color:var(--on-surface-variant);}
+  .menu-item .arrow{margin-left:auto;color:var(--outline);}
+  .logout-btn{border:1px solid var(--primary);width:100%;padding:16px;margin-top:24px;font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:8px;}
+  .version-txt{text-align:center;font-size:10px;color:var(--outline-variant);letter-spacing:0.08em;text-transform:uppercase;margin-top:20px;}
 
-        .metric-card .label {
-            color: var(--text-muted);
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 4px;
-        }
+  .pd-back{display:flex;align-items:center;gap:10px;padding:16px;position:sticky;top:0;background:var(--background);z-index:900;border-bottom:1px solid var(--outline-variant);justify-content:space-between;}
+  .pd-hero{width:100%;aspect-ratio:1/1.15;background-size:cover;background-position:center;}
+  .pd-body{padding:20px 16px 100px;}
+  .pd-cat{font-size:11px;color:var(--outline);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;}
+  .pd-name{font-size:26px;font-weight:800;text-transform:uppercase;letter-spacing:-0.01em;margin-bottom:10px;}
+  .pd-price{font-size:20px;font-weight:700;margin-bottom:18px;}
+  .pd-desc{font-size:14px;line-height:1.6;color:var(--on-surface-variant);margin-bottom:16px;}
+  .pd-quote{border-left:2px solid var(--primary);padding-left:14px;font-style:italic;font-size:14px;color:var(--on-surface);margin-bottom:26px;}
+  .opt-label{font-size:11px;font-weight:700;letter-spacing:0.1em;margin-bottom:10px;text-transform:uppercase;}
+  .swatch-row{display:flex;align-items:center;gap:10px;margin-bottom:22px;}
+  .swatch{width:26px;height:26px;border:1px solid var(--outline-variant);}
+  .size-row{display:flex;gap:10px;margin-bottom:24px;}
+  .size-opt{flex:1;border:1px solid var(--outline-variant);text-align:center;padding:14px 0;font-size:13px;font-weight:700;}
+  .size-opt.selected{background:var(--primary);color:var(--on-primary);border-color:var(--primary);}
+  .care-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px;}
+  .care-card{border:1px solid var(--outline-variant);padding:14px;}
+  .care-card .ci{font-size:16px;margin-bottom:8px;display:block;}
+  .care-card .ct{font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:4px;}
+  .care-card .cd{font-size:11px;color:var(--on-surface-variant);line-height:1.4;}
+  .pd-cta{position:fixed;bottom:0;left:0;right:0;padding:14px 16px;background:var(--background);border-top:1px solid var(--outline-variant);z-index:950;}
 
-        .metric-card .value {
-            font-size: 24px;
-            font-weight: 700;
-            margin-bottom: 4px;
-        }
-
-        .dashboard-card {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-
-        .card-title {
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-
-        /* --- COMPACT FOOTER TAB NAV BAR --- */
-        .nav-tab-bar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100vw;
-            height: 65px;
-            background-color: #090a0d;
-            border-top: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            z-index: 950;
-            padding-bottom: env(safe-area-inset-bottom);
-        }
-
-        .tab-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-muted);
-            text-decoration: none;
-            font-size: 10px;
-            font-weight: 500;
-            gap: 4px;
-            background: none;
-            border: none;
-            cursor: pointer;
-            width: 25%;
-            height: 100%;
-        }
-
-        .tab-item svg {
-            width: 20px;
-            height: 20px;
-            stroke: currentColor;
-            fill: none;
-            stroke-width: 2;
-            transition: color 0.2s;
-        }
-
-        .tab-item.active {
-            color: var(--accent-orange);
-        }
-
-        /* --- FORM ELEMENTS & BUTTONS --- */
-        .btn-orange {
-            background: var(--accent-gradient);
-            color: #000000;
-            border: none;
-            padding: 14px 24px;
-            border-radius: 10px;
-            font-size: 15px;
-            font-weight: 700;
-            width: 100%;
-            cursor: pointer;
-            box-shadow: 0 4px 15px var(--glow-color);
-            transition: opacity 0.2s;
-        }
-
-        .btn-orange:hover { opacity: 0.9; }
-
-        .btn-outline {
-            background: transparent;
-            border: 1px solid var(--border-color);
-            color: var(--text-main);
-            padding: 14px 24px;
-            border-radius: 10px;
-            font-size: 15px;
-            font-weight: 600;
-            width: 100%;
-            cursor: pointer;
-        }
-
-        /* --- MULTI-STEP ONBOARDING ENGINE LAYERS --- */
-        .onboarding-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background-color: var(--bg-dark);
-            z-index: 1000;
-            padding: 24px 20px;
-            display: none;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        .onboarding-screen.active-step {
-            display: flex;
-        }
-
-        .progress-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 11px;
-            font-weight: 600;
-            color: var(--text-gold);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 8px;
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 3px;
-            background-color: var(--border-color);
-            border-radius: 2px;
-            margin-bottom: 40px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background-color: var(--accent-orange);
-            width: 0%;
-            transition: width 0.3s ease;
-        }
-
-        .onboarding-center {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-        }
-
-        .onboarding-title {
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 12px;
-            line-height: 1.2;
-        }
-
-        .onboarding-subtitle {
-            color: var(--text-muted);
-            font-size: 14px;
-            margin-bottom: 32px;
-            line-height: 1.5;
-        }
-
-        /* --- CHOICE LISTS & INPUT FIELDS --- */
-        .selectable-card-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            width: 100%;
-            margin-bottom: 24px;
-        }
-
-        .selectable-card {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 14px;
-            padding: 20px;
-            display: flex;
-            align-items: flex-start;
-            gap: 16px;
-            cursor: pointer;
-            text-align: left;
-            transition: border-color 0.2s, background-color 0.2s;
-        }
-
-        .selectable-card .icon-wrap {
-            background-color: var(--bg-input);
-            padding: 10px;
-            border-radius: 8px;
-            color: var(--text-gold);
-            font-size: 16px;
-        }
-
-        .selectable-card .title {
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-
-        .selectable-card .desc {
-            color: var(--text-muted);
-            font-size: 12px;
-            line-height: 1.4;
-        }
-
-        .selectable-card.selected {
-            border-color: var(--accent-orange);
-            background-color: rgba(255, 122, 0, 0.02);
-        }
-
-        .input-container {
-            position: relative;
-            width: 100%;
-            margin-bottom: 24px;
-        }
-
-        .input-field {
-            width: 100%;
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-color);
-            padding: 18px 20px 18px 48px;
-            border-radius: 12px;
-            color: #ffffff;
-            font-size: 16px;
-            outline: none;
-        }
-
-        .input-prefix {
-            position: absolute;
-            left: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-gold);
-            font-family: serif;
-            font-style: italic;
-            font-size: 20px;
-        }
-
-        /* --- PROCESSING MODAL FRAME --- */
-        .processing-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(7, 7, 8, 0.96);
-            z-index: 2000;
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            padding: 24px;
-        }
-
-        .processing-circle {
-            width: 90px;
-            height: 90px;
-            border-radius: 50%;
-            border: 3px solid var(--border-color);
-            border-top-color: var(--accent-orange);
-            animation: spin 1s linear infinite;
-            margin-bottom: 24px;
-        }
-
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* --- PROFILE HERO UNIT --- */
-        .profile-hero {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            margin-bottom: 24px;
-        }
-        .avatar-frame {
-            width: 84px;
-            height: 84px;
-            border-radius: 50%;
-            border: 2px solid var(--accent-orange);
-            padding: 3px;
-            margin-bottom: 12px;
-            overflow: hidden;
-            background: var(--bg-input);
-        }
-        .avatar-frame img {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-    </style>
+  .nav-tab-bar{
+    position:fixed;bottom:0;left:0;right:0;display:flex;
+    background:var(--background);border-top:1px solid var(--outline-variant);
+    padding:10px 0 14px;z-index:1000;
+  }
+  .tab-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;color:var(--outline);font-size:9px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;}
+  .tab-item.active{color:var(--primary);}
+  .tab-item .ti-icon{font-size:19px;line-height:1;}
+</style>
 </head>
 <body>
 
-    <!-- Emergency Diagnostic Overlay Container -->
-    <div id="emergency-crash-log"></div>
+<div class="app-header" id="main-header">
+  <button class="icon-btn">☰</button>
+  <span class="brand-logo">GRAND</span>
+  <button class="icon-btn">🛍</button>
+</div>
 
-    <!-- --- MULTI-STEP ONBOARDING SYSTEM --- -->
-    <div id="step-welcome" class="onboarding-screen">
-        <div style="text-align:center; padding-top: 20px;"><div class="brand-logo">Instaboost</div></div>
-        <div class="onboarding-center">
-            <div style="width: 110px; height: 110px; border-radius: 50%; background: var(--bg-card); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; margin-bottom: 40px; box-shadow: 0 0 30px var(--glow-color);">
-                <span style="color: var(--accent-orange); font-size: 42px;">⚡</span>
-            </div>
-            <h1 class="onboarding-title">Welcome to <span style="color: var(--accent-orange);">Instaboost</span></h1>
-            <p class="onboarding-subtitle">Connect your live public creator profile tracking suite instantly.</p>
-        </div>
-        <button class="btn-orange" onclick="goToStep('welcome', 'goals')">Get Started</button>
+<div class="app-view active-view" id="view-home">
+  <div class="eyebrow">Колекція</div>
+  <h1 class="page-title" style="font-size:26px;">Vishukana estetyka</h1>
+  <div class="page-sub">Вишукана естетика для сучасного мінімаліста.</div>
+
+  <div class="section-row" style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px;">
+    <h2 style="font-size:15px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;">Новинки</h2>
+    <span onclick="openList('new')" style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;text-decoration:underline;text-underline-offset:3px;">Дивитись все</span>
+  </div>
+  <div class="grid-2" id="home-new-grid" style="margin-bottom:28px;"></div>
+
+  <div class="capsule-banner" style="background-image:url('https://images.unsplash.com/photo-1445205170230-053b83016050?w=800&q=80')">
+    <div class="cb-eyebrow">Лімітована серія</div>
+    <h3>Капсула Onyx</h3>
+    <button class="btn-solid" onclick="openList('new')">Купити</button>
+  </div>
+
+  <div class="section-row" style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px;">
+    <h2 style="font-size:15px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;">Вибране</h2>
+    <span class="count-txt">4 товари</span>
+  </div>
+  <div class="hscroll" id="home-fav-scroll"></div>
+</div>
+
+<div class="app-view" id="view-search">
+  <div class="search-input-wrap">
+    <input type="text" placeholder="Що ви шукаєте?" id="search-field">
+    <span class="clear-x" onclick="document.getElementById('search-field').value=''">✕</span>
+  </div>
+
+  <div class="eyebrow" style="margin-bottom:2px;">Останні запити</div>
+  <div class="recent-item"><span>Чорний тренч</span><span class="arrow">↖</span></div>
+  <div class="recent-item"><span>Шкіряні чоботи</span><span class="arrow">↖</span></div>
+  <div class="recent-item"><span>Кашеміровий светр</span><span class="arrow">↖</span></div>
+  <div class="clear-all">Очистити все</div>
+
+  <div class="eyebrow" style="margin-bottom:14px;">Популярно зараз</div>
+  <div class="tag-grid">
+    <div class="tag-chip">Loro Piana</div>
+    <div class="tag-chip">Шовкові сукні</div>
+    <div class="tag-chip">Minimalism</div>
+    <div class="tag-chip">Костюми</div>
+    <div class="tag-chip">Pre-Fall 24</div>
+  </div>
+
+  <div class="new-collection-banner">
+    <div class="icon">✂</div>
+    <h3>Нова колекція</h3>
+    <p>Відкрийте для себе архітектурні силуети цього сезону.</p>
+    <a onclick="openList('new')">Дивитись все →</a>
+  </div>
+</div>
+
+<div class="app-view" id="view-category">
+  <button class="icon-btn" style="margin-bottom:14px;" onclick="switchTab('home', document.querySelector('.tab-item[data-tab=home]'))">←</button>
+  <div class="eyebrow">Категорія</div>
+  <h1 class="page-title">Одяг</h1>
+  <div class="filter-row" style="margin:14px 0 16px;">
+    <span class="sort-btn">Сортувати ⌄</span>
+    <span class="count-txt" id="cat-count">128 виробів</span>
+  </div>
+  <div class="tab-scroll">
+    <div class="filter-tab active">Усі</div>
+    <div class="filter-tab">Верхній одяг</div>
+    <div class="filter-tab">Піджаки</div>
+    <div class="filter-tab">Штани</div>
+    <div class="filter-tab">Трикотаж</div>
+  </div>
+  <div id="category-list"></div>
+  <button class="load-more">Завантажити ще</button>
+  <div class="page-dots"><span class="dash"></span>01 / 04<span class="dash"></span></div>
+</div>
+
+<div class="app-view" id="view-new">
+  <button class="icon-btn" style="margin-bottom:14px;" onclick="switchTab('home', document.querySelector('.tab-item[data-tab=home]'))">←</button>
+  <h1 class="page-title">Новинки</h1>
+  <div class="page-sub">Усі товари / Останні надходження</div>
+  <div class="tab-scroll">
+    <div class="filter-tab active">Усі</div>
+    <div class="filter-tab">Одяг</div>
+    <div class="filter-tab">Аксесуари</div>
+    <div class="filter-tab">Взуття</div>
+  </div>
+  <div class="filter-row" style="margin-bottom:16px;">
+    <span class="sort-btn">Сортувати ⌄</span>
+  </div>
+  <div class="grid-2" id="new-grid"></div>
+  <button class="load-more">Завантажити ще</button>
+  <div class="count-txt" style="display:block;text-align:center;margin-bottom:20px;">Показано 8 із 42 товарів</div>
+</div>
+
+<div class="app-view" id="view-favorites">
+  <h1 class="page-title">Вибране</h1>
+  <div class="page-sub" style="margin-bottom:8px;">Ваша персональна добірка вишуканих речей. Мінімалізм як стиль життя.</div>
+  <div id="favorites-list"></div>
+</div>
+
+<div class="app-view" id="view-profile">
+  <div class="profile-head">
+    <div class="avatar-ring" style="background-image:url('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&q=80')"></div>
+    <h2>Олександр Іванов</h2>
+    <div class="handle">@ALEX_GRAND</div>
+  </div>
+  <div class="status-card">
+    <div>
+      <div class="eyebrow" style="margin-bottom:4px;">Ваш аккаунт</div>
+      <div style="font-size:13px;color:var(--on-surface-variant);">Статус підписки:</div>
+      <div class="tier">Premium</div>
+    </div>
+    <div class="status-icon">★</div>
+  </div>
+  <div class="menu-list">
+    <div class="menu-item"><span class="mi-icon">📦</span><span>Мої замовлення</span><span class="arrow">›</span></div>
+    <div class="menu-item"><span class="mi-icon">📍</span><span>Адреси доставки</span><span class="arrow">›</span></div>
+    <div class="menu-item"><span class="mi-icon">💳</span><span>Способи оплати</span><span class="arrow">›</span></div>
+    <div class="menu-item"><span class="mi-icon">⚙</span><span>Налаштування</span><span class="arrow">›</span></div>
+    <div class="menu-item"><span class="mi-icon">🎧</span><span>Підтримка</span><span class="arrow">›</span></div>
+  </div>
+  <button class="logout-btn">⎋ Вийти</button>
+  <div class="version-txt">Version 1.0.4 — © Grand Editorial</div>
+</div>
+
+<div class="app-view" id="view-product">
+  <div class="pd-back">
+    <button class="icon-btn" onclick="closeProduct()">←</button>
+    <span class="brand-logo" style="font-size:16px;">GRAND</span>
+    <button class="icon-btn">🛍</button>
+  </div>
+  <div class="pd-hero" id="pd-hero"></div>
+  <div class="pd-body">
+    <div class="pd-cat" id="pd-cat"></div>
+    <div class="pd-name" id="pd-name"></div>
+    <div class="pd-price" id="pd-price"></div>
+    <div class="pd-desc" id="pd-desc"></div>
+    <div class="pd-quote">«Монументальна форма зустрічається з утилітарною функцією.»</div>
+
+    <div class="opt-label">Колір</div>
+    <div class="swatch-row"><div class="swatch" style="background:#f2f2f2;"></div><span style="font-size:13px;">Obsidian Black</span></div>
+
+    <div class="opt-label" style="display:flex;justify-content:space-between;">
+      <span>Розмір</span><span style="text-decoration:underline;text-underline-offset:3px;">Таблиця розмірів</span>
+    </div>
+    <div class="size-row">
+      <div class="size-opt" onclick="selectSize(this)">S</div>
+      <div class="size-opt selected" onclick="selectSize(this)">M</div>
+      <div class="size-opt" onclick="selectSize(this)">L</div>
+      <div class="size-opt" onclick="selectSize(this)">XL</div>
     </div>
 
-    <div id="step-goals" class="onboarding-screen">
-        <div>
-            <div class="progress-header"><span>Step 1 of 3</span><span>33% Complete</span></div>
-            <div class="progress-bar"><div class="progress-fill" style="width: 33%;"></div></div>
-            <h1 style="font-size: 24px; margin-bottom: 8px;">What is your primary goal?</h1>
-            <p style="color:var(--text-muted); font-size:13px; margin-bottom:24px;">Tailor your performance trajectory filters.</p>
-            
-            <div class="selectable-card-list">
-                <div class="selectable-card selected" data-goal="Grow Followers" onclick="selectCard(this)">
-                    <div class="icon-wrap">👤</div>
-                    <div>
-                        <div class="title">Grow Followers</div>
-                        <div class="desc">Expand your audience pool with live velocity tracking systems.</div>
-                    </div>
-                </div>
-                <div class="selectable-card" data-goal="Boost Engagement" onclick="selectCard(this)">
-                    <div class="icon-wrap">♥</div>
-                    <div>
-                        <div class="title">Boost Engagement</div>
-                        <div class="desc">Maximize user response frequency across published videos.</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div style="display:flex; gap:12px; width:100%;">
-            <button class="btn-outline" style="width:35%;" onclick="goToStep('goals', 'welcome')">Back</button>
-            <button class="btn-orange" style="width:65%;" onclick="goToStep('goals', 'handle')">Continue</button>
-        </div>
+    <div class="care-grid">
+      <div class="care-card"><span class="ci">📐</span><div class="ct">Крій</div><div class="cd">Анатомічний силует з артикульованими рукавами.</div></div>
+      <div class="care-card"><span class="ci">💧</span><div class="ct">Захист</div><div class="cd">DWR покриття та проклеєні шви.</div></div>
     </div>
+  </div>
+  <div class="pd-cta"><button class="btn-solid">Додати у кошик 🛒</button></div>
+</div>
 
-    <div id="step-handle" class="onboarding-screen">
-        <div>
-            <div class="progress-header"><span>Step 2 of 3</span><span>66% Complete</span></div>
-            <div class="progress-bar"><div class="progress-fill" style="width: 66%;"></div></div>
-            <h1 style="font-size: 24px; margin-bottom: 8px; text-align:center; margin-top:20px;">Your <span style="color: var(--accent-orange);">TikTok handle</span></h1>
-            <p style="color:var(--text-muted); font-size:13px; text-align:center; margin-bottom:40px;">Enter an active username to pull factual network data profiles.</p>
-            
-            <div class="input-container">
-                <span class="input-prefix">@</span>
-                <input type="text" class="input-field" id="user-handle-input" placeholder="mrbeast">
-            </div>
-        </div>
-        <button class="btn-orange" onclick="processLiveSyncData()">Sync TikTok Profile</button>
-    </div>
+<div class="nav-tab-bar" id="bottom-nav">
+  <button class="tab-item active" data-tab="home" onclick="switchTab('home', this)"><span class="ti-icon">⌂</span>Головна</button>
+  <button class="tab-item" data-tab="search" onclick="switchTab('search', this)"><span class="ti-icon">⌕</span>Пошук</button>
+  <button class="tab-item" data-tab="favorites" onclick="switchTab('favorites', this)"><span class="ti-icon">♡</span>Обране</button>
+  <button class="tab-item" data-tab="profile" onclick="switchTab('profile', this)"><span class="ti-icon">☺</span>Профіль</button>
+</div>
 
-    <!-- LIVE DATA SYNC PROCESSING MODAL OVERLAY -->
-    <div id="processing-screen" class="processing-overlay">
-        <div class="processing-circle"></div>
-        <h2 style="font-size:22px; font-weight:700; margin-bottom:8px;" id="sync-status-title">Querying Metrics...</h2>
-        <p style="color:var(--text-gold); font-size:11px; letter-spacing:1px; text-transform:uppercase;" id="sync-status-sub">Establishing pipeline link</p>
-    </div>
+<script>
+var tg = window.Telegram ? window.Telegram.WebApp : null;
+try { if (tg) { tg.ready(); tg.expand(); } } catch(e){}
 
-    <div id="step-success" class="onboarding-screen">
-        <div style="text-align:center; padding-top: 20px;"><div class="brand-logo">Instaboost</div></div>
-        <div class="onboarding-center">
-            <h1 class="onboarding-title" style="font-size:26px;" id="success-headline">Profile Synchronized</h1>
-            <p class="onboarding-subtitle" style="font-size:13px; padding:0 10px;" id="success-body">Verified live structural data tracks captured from data streams.</p>
-        </div>
-        <button class="btn-orange" onclick="launchMainDashboardWorkspace()">Enter Dashboard</button>
-    </div>
+var PRODUCTS = [
+  {id:'blazer', cat:'Outerwear / Grand Edition', name:'Structured Blazer', mat:'Wool / Silk Blend', price:'24,500 ₴', badge:'Limited',
+   img:'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600&q=80',
+   desc:'Втілення архітектурної точності та сучасних технологій. Створений для тих, хто цінує структурну цілісність та функціональний мінімалізм.'},
+  {id:'pant', cat:'Bottoms / Structural Line', name:'Architect Pant', mat:'Raw Cotton / Charcoal', price:'18,200 ₴',
+   img:'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=600&q=80',
+   desc:'Прямий силует із заниженою посадкою. Виготовлений з щільної бавовни для чіткої архітектурної драпіровки.'},
+  {id:'gilet', cat:'Vests / Utility Core', name:'Vector Gilet', mat:'Tech Nylon / Thermal', price:'15,900 ₴', badge:'New Season',
+   img:'https://images.unsplash.com/photo-1544923246-77307dd654cb?w=600&q=80',
+   desc:'Технічний жилет з множинними кишенями для повсякденного утилітарного стилю.'},
+  {id:'knit', cat:'Knitwear / Obsidian Lab', name:'Sculpted Knit', mat:'Merino / Cashmere', price:'12,400 ₴',
+   img:'https://images.unsplash.com/photo-1576871337622-98d48d1cf531?w=600&q=80',
+   desc:'Обємний светр із суміші мериносу та кашеміру. Мяка структура з чіткими лініями плеча.'},
+  {id:'trench', cat:'Технічний верхній одяг', name:'Tech Trench II', mat:'Outerwear / Grand Edition', price:'18,500 ₴', badge:'New Arrival',
+   img:'https://images.unsplash.com/photo-1520975916090-3105956dac38?w=700&q=80',
+   desc:'Втілення архітектурної точності та сучасних технологій. Tech Trench II створений для тих, хто цінує структурну цілісність та функціональний мінімалізм. Виготовлений з тришарового композитного нейлону, що забезпечує абсолютний захист від вітру та вологи при збереженні повітропроникності.'},
+  {id:'clutch', cat:'Accessories / Titanium Series', name:'Titanium Clutch', mat:'Accessories', price:'890.00 $',
+   img:'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600&q=80',
+   desc:'Мінімалістичний клатч з титановою рамкою та магнітним замком.'},
+  {id:'pullover', cat:'Knitwear / Obsidian Lab', name:'Carbon Pullover', mat:'Bottoms / Structural Line', price:'450.00 $',
+   img:'https://images.unsplash.com/photo-1614179689702-355944cd0918?w=600&q=80',
+   desc:'Легкий пуловер із карбоновою фактурою пряжі.'},
+  {id:'mono', cat:'Eyewear / Brutalist Frame', name:'Mono Vision X', mat:'Eyewear', price:'380.00 $',
+   img:'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=600&q=80',
+   desc:'Скульптурна оправа з моноблочною лінзою.'},
+  {id:'scarf', cat:'Accessories / Ethereal Series', name:'Void Scarf', mat:'Accessories', price:'210.00 $',
+   img:'https://images.unsplash.com/photo-1520903920243-5b0205a7a9a1?w=600&q=80',
+   desc:'Невагомий шарф з мерсеризованої вовни.'},
+  {id:'boot', cat:'Footwear / Brutalist Walk', name:'Titan Boot', mat:'Footwear', price:'950.00 $',
+   img:'https://images.unsplash.com/photo-1608256246200-53e635b5b65f?w=600&q=80',
+   desc:'Масивний черевик з протекторною підошвою та посиленим носком.'},
+  {id:'derbies', cat:'Footwear', name:'Mono Derbies', mat:'Leather', price:'12,200 ₴',
+   img:'https://images.unsplash.com/photo-1614252369475-531eba835eb1?w=600&q=80',
+   desc:'Класичні дербі з гладкої телячої шкіри на мінімалістичній підошві.'},
+  {id:'carryall', cat:'Accessories', name:'Box Carryall', mat:'Leather', price:'24,000 ₴',
+   img:'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600&q=80',
+   desc:'Структурована сумка з жорсткими гранями та знімним ременем.'}
+];
 
+var FAVORITE_IDS = ['blazer','derbies','carryall'];
+var NEW_IDS = ['trench','clutch','pant','knit','mono','gilet','scarf','boot'];
+var CATEGORY_IDS = ['blazer','pant','gilet','knit'];
 
-    <!-- --- MAIN APPLICATION INTERFACE --- -->
-    <div id="main-application-suite" style="display: none;">
-        
-        <header class="app-header">
-            <div class="brand-logo">⚡ Instaboost</div>
-            <div class="header-actions">
-                <button class="icon-btn" onclick="fetchLiveTikTokData(appState.handle, true)">🔄</button>
-            </div>
-        </header>
+function findP(id){ return PRODUCTS.filter(function(p){return p.id===id;})[0]; }
 
-        <!-- SECTION 1: Home Dashboard View -->
-        <div id="view-home" class="app-view active-view">
-            <h1>Performance Deep Dive</h1>
-            <p class="view-subtitle">Analyzing live video metrics for <span id="dash-handle-title" style="color:var(--accent-orange); font-weight:600;">@user</span></p>
-            
-            <div class="metrics-grid">
-                <div class="metric-card">
-                    <div class="metric-meta"><span>👥</span><span style="color:var(--accent-orange);">Live</span></div>
-                    <div class="label">Followers</div>
-                    <div class="value" id="val-followers">0</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-meta"><span>👁</span><span style="color:var(--accent-orange);">Live</span></div>
-                    <div class="label">Total Likes</div>
-                    <div class="value" id="val-likes">0</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-meta"><span>📺</span><span style="color:var(--text-gold);">Videos</span></div>
-                    <div class="label">Total Posts</div>
-                    <div class="value" id="val-videos">0</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-meta"><span>⏱</span><span>Ratio</span></div>
-                    <div class="label">Likes Per Follower</div>
-                    <div class="value" id="val-engagement">0.0x</div>
-                </div>
-            </div>
+function pcardHTML(p){
+  return '<div class="pcard" onclick="openProduct(\''+p.id+'\')">'+
+    '<div class="pimg" style="background-image:url(\''+p.img+'\')">'+
+      (p.badge?'<div class="badge">'+p.badge+'</div>':'')+
+    '</div>'+
+    '<div class="pinfo">'+
+      '<div class="pcat">'+p.mat+'</div>'+
+      '<div class="pname">'+p.name+'</div>'+
+      '<div class="pprice">'+p.price+'</div>'+
+    '</div></div>';
+}
 
-            <div class="dashboard-card">
-                <div class="card-title">Profile Bio Record</div>
-                <div style="color:var(--text-muted); font-size:13px; margin-top:6px; line-height:1.4;" id="profile-bio-text">No data synced.</div>
-            </div>
-        </div>
+function pcardWideHTML(p, removable){
+  return '<div class="pcard-wide">'+
+    (removable?'<div class="remove-x" onclick="event.stopPropagation()">✕</div>':'')+
+    '<div class="pimg" style="background-image:url(\''+p.img+'\')" onclick="openProduct(\''+p.id+'\')">'+
+      (p.badge?'<div class="badge">'+p.badge+'</div>':'')+
+    '</div>'+
+    '<div class="prow">'+
+      '<div><div class="pcat">'+p.cat+'</div><div class="pname">'+p.name+'</div>'+(removable?'':'<div class="pmat">'+p.mat+'</div>')+'</div>'+
+      '<div class="pprice">'+p.price+'</div>'+
+    '</div>'+
+    (removable?'<button class="add-cart-btn">У кошик</button>':'')+
+  '</div>';
+}
 
-        <!-- SECTION 2: Stats Framework View -->
-        <div id="view-stats" class="app-view">
-            <h1>Analytics Workspace</h1>
-            <p class="view-subtitle">Factual profile signature configuration evaluation.</p>
-            <div class="dashboard-card">
-                <div class="card-title">Verification Logs</div>
-                <p style="color:var(--text-muted); font-size:13px; line-height: 1.5; margin-top: 8px;" id="stats-signature-desc">
-                    Metrics streaming correctly under optimized tracking parameters.
-                </p>
-            </div>
-        </div>
+function hcardHTML(p){
+  return '<div class="hcard" onclick="openProduct(\''+p.id+'\')">'+
+    '<div class="himg" style="background-image:url(\''+p.img+'\')"></div>'+
+    '<div class="hname">'+p.name+'</div>'+
+    '<div class="hprice">'+p.price+'</div>'+
+  '</div>';
+}
 
-        <!-- SECTION 3: Predictive Trends Forecasting View -->
-        <div id="view-trends" class="app-view">
-            <h1>Viral Velocity</h1>
-            <p class="view-subtitle">Real-time predictive signals based on creator ecosystem.</p>
-            
-            <div class="metrics-grid">
-                <div class="metric-card">
-                    <div class="metric-meta">
-                        <span>🎵 Top Sound Lift</span>
-                        <span style="background: rgba(255, 122, 0, 0.1); color: var(--accent-orange); padding: 2px 6px; border-radius: 4px; font-size: 10px;" id="trend-sound-lift">+42%</span>
-                    </div>
-                    <div class="value" style="font-size: 18px; margin-top: 8px;" id="trend-sound-name">Neon Drift</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-meta">
-                        <span>🧭 Hashtag Velocity</span>
-                        <span style="background: rgba(255, 122, 0, 0.1); color: var(--accent-orange); padding: 2px 6px; border-radius: 4px; font-size: 10px;">Rapid</span>
-                    </div>
-                    <div class="value" style="font-size: 18px; margin-top: 8px;" id="trend-hashtag">#AIGlow</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-meta">
-                        <span>🤖 AI Rec. Score</span>
-                        <span style="background: rgba(255, 122, 0, 0.1); color: var(--accent-orange); padding: 2px 6px; border-radius: 4px; font-size: 10px;">High</span>
-                    </div>
-                    <div class="value" style="font-size: 24px; margin-top: 8px;" id="trend-ai-score">98.4</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-meta">
-                        <span>🕸 Predicted Reach</span>
-                        <span style="background: rgba(255, 122, 0, 0.1); color: var(--text-gold); padding: 2px 6px; border-radius: 4px; font-size: 10px;" id="trend-reach-val">8.2M</span>
-                    </div>
-                    <div class="value" style="font-size: 24px; margin-top: 8px;" id="trend-tier">Tier 1</div>
-                </div>
-            </div>
+document.getElementById('category-list').innerHTML = CATEGORY_IDS.map(function(id){return pcardWideHTML(findP(id), false);}).join('');
+document.getElementById('new-grid').innerHTML = NEW_IDS.map(function(id){return pcardHTML(findP(id));}).join('');
+document.getElementById('home-new-grid').innerHTML = NEW_IDS.slice(0,4).map(function(id){return pcardHTML(findP(id));}).join('');
+document.getElementById('favorites-list').innerHTML = FAVORITE_IDS.map(function(id){return pcardWideHTML(findP(id), true);}).join('');
+document.getElementById('home-fav-scroll').innerHTML = FAVORITE_IDS.map(function(id){return hcardHTML(findP(id));}).join('');
 
-            <div class="dashboard-card" style="position: relative;">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
-                    <div>
-                        <div class="card-title" style="font-size: 20px;">Engagement Prediction</div>
-                        <div style="color: var(--text-muted); font-size: 12px; margin-top: 4px;">Projected interactions per hour</div>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-muted);">
-                        <span style="width: 8px; height: 8px; background: #e2b08a; border-radius: 50%;"></span> Active Forecast
-                    </div>
-                </div>
-                
-                <div style="display: flex; justify-content: space-between; align-items: flex-end; height: 100px; padding: 0 10px; margin-bottom: 10px; border-bottom: 1px dashed var(--border-color);" id="trend-chart-bars">
-                    <div style="width: 8%; background: linear-gradient(to top, var(--border-color), #e2b08a); height: 40%; border-radius: 4px 4px 0 0;"></div>
-                    <div style="width: 8%; background: linear-gradient(to top, var(--border-color), #e2b08a); height: 65%; border-radius: 4px 4px 0 0;"></div>
-                    <div style="width: 8%; background: linear-gradient(to top, var(--border-color), #e2b08a); height: 85%; border-radius: 4px 4px 0 0;"></div>
-                    <div style="width: 8%; background: linear-gradient(to top, var(--border-color), #e2b08a); height: 50%; border-radius: 4px 4px 0 0;"></div>
-                    <div style="width: 8%; background: linear-gradient(to top, var(--border-color), #e2b08a); height: 30%; border-radius: 4px 4px 0 0;"></div>
-                    <div style="width: 8%; background: linear-gradient(to top, var(--border-color), #e2b08a); height: 75%; border-radius: 4px 4px 0 0;"></div>
-                </div>
+function switchTab(tabId, el){
+  document.querySelectorAll('.app-view').forEach(function(v){v.classList.remove('active-view');});
+  document.querySelectorAll('.tab-item').forEach(function(b){b.classList.remove('active');});
+  var view = document.getElementById('view-'+tabId);
+  if(view) view.classList.add('active-view');
+  if(el) el.classList.add('active');
+  document.getElementById('bottom-nav').style.display = 'flex';
+  document.getElementById('main-header').style.display = 'flex';
+  window.scrollTo(0,0);
+}
 
-                <div style="display: flex; justify-content: space-between; color: var(--text-muted); font-size: 11px; padding: 0 5px;">
-                    <span>08:00</span><span>12:00</span><span>16:00</span><span>20:00</span><span>00:00</span><span>04:00</span>
-                </div>
-            </div>
+function openList(which){
+  document.querySelectorAll('.app-view').forEach(function(v){v.classList.remove('active-view');});
+  document.getElementById('view-'+which).classList.add('active-view');
+  document.querySelectorAll('.tab-item').forEach(function(b){b.classList.remove('active');});
+  document.getElementById('bottom-nav').style.display = 'flex';
+  document.getElementById('main-header').style.display = 'flex';
+  window.scrollTo(0,0);
+}
 
-            <div class="dashboard-card" style="display: flex; align-items: center; justify-content: space-between; padding: 16px;">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <div style="width: 48px; height: 48px; background: var(--bg-input); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; border: 1px solid var(--border-color);" id="trend-pair-avatar">✨</div>
-                    <div>
-                        <div class="card-title" style="font-size: 14px; margin: 0;">Trending Creator Pair</div>
-                        <div style="color: var(--text-muted); font-size: 12px; margin-top: 2px;" id="trend-pair-names">@CyberVision + @NexusPulse</div>
-                    </div>
-                </div>
-                <button style="background: #fecfa6; color: #000; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 700; font-size: 12px; cursor: pointer;">VIEW</button>
-            </div>
-        </div>
+function openProduct(id){
+  var p = findP(id);
+  document.getElementById('pd-hero').style.backgroundImage = "url('"+p.img+"')";
+  document.getElementById('pd-cat').innerText = p.cat;
+  document.getElementById('pd-name').innerText = p.name;
+  document.getElementById('pd-price').innerText = p.price;
+  document.getElementById('pd-desc').innerText = p.desc;
+  document.querySelectorAll('.app-view').forEach(function(v){v.classList.remove('active-view');});
+  document.getElementById('view-product').classList.add('active-view');
+  document.getElementById('bottom-nav').style.display = 'none';
+  document.getElementById('main-header').style.display = 'none';
+  window.scrollTo(0,0);
+}
 
-        <!-- SECTION 4: Profile Configuration View -->
-        <div id="view-profile" class="app-view">
-            <h1>Workspace Settings</h1>
-            <p class="view-subtitle">Manage your active pipeline parameters.</p>
-            <div class="profile-hero">
-                <div class="avatar-frame" id="profile-avatar-box">✨</div>
-                <h2 style="font-size:20px; font-weight:700;" id="profile-display-name">Creator Account</h2>
-                <p style="color:var(--accent-orange); font-size:14px; margin-top:2px; font-weight:600;" id="profile-display-handle">@user</p>
-            </div>
-            <div class="dashboard-card">
-                <div class="card-title" style="margin-bottom:12px;">Pipeline Parameters</div>
-                <div style="display:flex; justify-content:space-between; padding: 8px 0; border-bottom: 1px solid var(--border-color);">
-                    <span style="color:var(--text-muted); font-size:13px;">Target Optimization Strategy</span>
-                    <span style="color:var(--text-gold); font-size:13px; font-weight:600;" id="meta-goal">None Specified</span>
-                </div>
-            </div>
-            <button class="btn-outline" style="border-color:#ff4d0d; color:#ff4d0d;" onclick="resetAppMemory()">Disconnect Workspace</button>
-        </div>
+function closeProduct(){
+  switchTab('home', document.querySelector('.tab-item[data-tab=home]'));
+}
 
-        <!-- FIXED BOTTOM FOOTER NAVIGATION TAB BAR -->
-        <nav class="nav-tab-bar">
-            <button class="tab-item active" onclick="switchTab('home', this)">
-                <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                <span>Home</span>
-            </button>
-            <button class="tab-item" onclick="switchTab('stats', this)">
-                <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-                <span>Stats</span>
-            </button>
-            <button class="tab-item" onclick="switchTab('trends', this)">
-                <svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-                <span>Trends</span>
-            </button>
-            <button class="tab-item" onclick="switchTab('profile', this)">
-                <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                <span>Profile</span>
-            </button>
-        </nav>
-
-    </div>
-
-   <!-- --- CONTROL LOGIC SCRIPT --- -->
-    <script>
-        window.addEventListener('error', function(e) {
-            var box = document.getElementById('emergency-crash-log');
-            if(box) {
-                box.style.display = 'block';
-                box.innerText = "Fatal Runtime Error: " + e.message + "\nLine: " + e.lineno + "\nFile: " + e.filename;
-            }
-        });
-
-        var safeStorage = {
-            getItem: function(key) {
-                try { return localStorage.getItem(key); } catch(e) { return null; }
-            },
-            setItem: function(key, val) {
-                try { localStorage.setItem(key, val); return true; } catch(e) { return false; }
-            },
-            clear: function() {
-                try { localStorage.clear(); } catch(e) {}
-            }
-        };
-
-        var tg = null;
-        try {
-            if (window.Telegram && window.Telegram.WebApp) {
-                tg = window.Telegram.WebApp;
-                tg.ready();
-                tg.expand();
-            }
-        } catch (e) {
-            console.error("TG interface binding skipped.", e);
-        }
-
-        var appState = {
-            handle: '',
-            goal: '',
-            isRegistered: false,
-            liveMetrics: null
-        };
-
-        window.addEventListener('DOMContentLoaded', function() {
-            if (tg) {
-                try { tg.ready(); tg.expand(); } catch(err){}
-            }
-            loadApplicationState();
-        });
-
-        function loadApplicationState() {
-            try {
-                var savedHandle = safeStorage.getItem('ib_user_handle');
-                var savedGoal = safeStorage.getItem('ib_user_goal');
-                
-                if (savedHandle) {
-                    appState.handle = savedHandle;
-                    appState.goal = savedGoal || 'Grow Followers';
-                    appState.isRegistered = true;
-                    
-                    var cachedMetrics = safeStorage.getItem('ib_cached_metrics');
-                    if(cachedMetrics) {
-                        try {
-                            appState.liveMetrics = JSON.parse(cachedMetrics);
-                        } catch(e) { appState.liveMetrics = null; }
-                    }
-                    
-                    if (!appState.liveMetrics) {
-                        appState.liveMetrics = {
-                            followers: "Loading...",
-                            likes: "Loading...",
-                            videos: "Loading...",
-                            bio: "Initializing tracking pipeline...",
-                            nickname: savedHandle,
-                            avatar: ""
-                        };
-                    }
-
-                    bindDataToUI();
-                    document.getElementById('main-application-suite').style.display = 'block';
-                    fetchLiveTikTokData(savedHandle, false);
-                } else {
-                    document.getElementById('step-welcome').classList.add('active-step');
-                }
-            } catch (e) {
-                document.getElementById('step-welcome').classList.add('active-step');
-            }
-        }
-
-        function goToStep(current, next) {
-            triggerHapticFeedback();
-            var currentEl = document.getElementById('step-' + current);
-            var nextEl = document.getElementById('step-' + next);
-            if(currentEl) currentEl.classList.remove('active-step');
-            if(nextEl) nextEl.classList.add('active-step');
-        }
-
-        function selectCard(element) {
-            triggerHapticFeedback();
-            document.querySelectorAll('.selectable-card').forEach(function(card) {
-                card.classList.remove('selected');
-            });
-            element.classList.add('selected');
-        }
-
-        function fetchLiveTikTokData(username, showOverlay) {
-            return new Promise(function(resolve, reject) {
-                if(showOverlay === undefined) showOverlay = false;
-                var overlay = document.getElementById('processing-screen');
-                var statusTitle = document.getElementById('sync-status-title');
-                var statusSub = document.getElementById('sync-status-sub');
-                
-                if (showOverlay && overlay) {
-                    if(statusTitle) statusTitle.innerText = "Connecting App Stream...";
-                    if(statusSub) statusSub.innerText = "Querying secure backend link for @" + username;
-                    overlay.style.display = 'flex';
-                }
-
-                var backendUrl = 'https://instaboost-app.dargon4ek.workers.dev/api/tiktok?username=' + encodeURIComponent(username);
-                
-                fetch(backendUrl)
-                    .then(function(res) { 
-                        return res.json(); 
-                    })
-                    .then(function(payload) {
-                        if (!payload || payload.error) {
-                            throw new Error("Target pipeline error response.");
-                        }
-
-                        var parsedFollowers = payload.followerCount || payload.followers || 0;
-                        var parsedLikes = payload.heartCount || payload.likesCount || payload.likes || 0;
-                        var parsedVideos = payload.videoCount || payload.videos || 0;
-
-                        appState.liveMetrics = {
-                            followers: parsedFollowers,
-                            likes: parsedLikes,
-                            videos: parsedVideos,
-                            bio: payload.signature || "Live track pipeline active.",
-                            nickname: payload.nickname || username,
-                            avatar: payload.avatar || ""
-                        };
-
-                        safeStorage.setItem('ib_cached_metrics', JSON.stringify(appState.liveMetrics));
-                        bindDataToUI();
-                        if (showOverlay && overlay) { overlay.style.display = 'none'; }
-                        resolve(appState.liveMetrics);
-                    })
-                    .catch(function(err) {
-                        console.error("Pipeline breakdown details: ", err);
-                        
-                        // Fallback cleanly checks if we have a real collected history
-                        var cachedMetrics = safeStorage.getItem('ib_cached_metrics');
-                        if (cachedMetrics) {
-                            try { appState.liveMetrics = JSON.parse(cachedMetrics); } catch(e){}
-                        }
-                        
-                        if (!appState.liveMetrics) {
-                            appState.liveMetrics = {
-                                followers: "Offline",
-                                likes: "Offline",
-                                videos: "Offline",
-                                bio: "Sync pipeline issues. Verify your worker data streams.",
-                                nickname: username,
-                                avatar: ""
-                            };
-                        }
-                        
-                        bindDataToUI();
-                        if (showOverlay && overlay) { overlay.style.display = 'none'; }
-                        resolve(appState.liveMetrics);
-                    });
-            });
-        }
-
-        function processLiveSyncData() {
-            triggerHapticFeedback();
-            var inputEl = document.getElementById('user-handle-input');
-            var handleInput = inputEl ? inputEl.value.trim().replace('@', '') : '';
-            if (!handleInput) {
-                alert('Please enter an active TikTok handle.');
-                return;
-            }
-
-            var selectedGoalCard = document.querySelector('.selectable-card.selected');
-            appState.goal = selectedGoalCard ? selectedGoalCard.getAttribute('data-goal') : 'Grow Followers';
-            appState.handle = handleInput;
-
-            var overlay = document.getElementById('processing-screen');
-            if(overlay) overlay.style.display = 'flex';
-            
-            fetchLiveTikTokData(handleInput, false)
-                .then(function() {
-                    safeStorage.setItem('ib_user_handle', appState.handle);
-                    safeStorage.setItem('ib_user_goal', appState.goal);
-                    safeStorage.setItem('ib_registered', 'true');
-                    appState.isRegistered = true;
-
-                    if(overlay) overlay.style.display = 'none';
-                    var stepHandle = document.getElementById('step-handle');
-                    if(stepHandle) stepHandle.classList.remove('active-step');
-                    
-                    var stepSuccess = document.getElementById('step-success');
-                    if(stepSuccess) stepSuccess.classList.add('active-step');
-                });
-        }
-
-        function bindDataToUI() {
-            if (!appState.handle) return;
-            var displayHandle = "@" + appState.handle.toLowerCase();
-            
-            if(document.getElementById('dash-handle-title')) document.getElementById('dash-handle-title').innerText = displayHandle;
-            if(document.getElementById('profile-display-handle')) document.getElementById('profile-display-handle').innerText = displayHandle;
-            if(document.getElementById('meta-goal')) document.getElementById('meta-goal').innerText = appState.goal;
-
-            if (appState.liveMetrics) {
-                var metrics = appState.liveMetrics;
-                
-                if(document.getElementById('val-followers')) {
-                    document.getElementById('val-followers').innerText = isNaN(metrics.followers) ? metrics.followers : Number(metrics.followers).toLocaleString();
-                }
-                if(document.getElementById('val-likes')) {
-                    document.getElementById('val-likes').innerText = isNaN(metrics.likes) ? metrics.likes : Number(metrics.likes).toLocaleString();
-                }
-                if(document.getElementById('val-videos')) {
-                    document.getElementById('val-videos').innerText = isNaN(metrics.videos) ? metrics.videos : Number(metrics.videos).toLocaleString();
-                }
-                
-                var ratio = (metrics.followers > 0 && !isNaN(metrics.followers) && !isNaN(metrics.likes)) ? (metrics.likes / metrics.followers).toFixed(1) : "0.0";
-                if(document.getElementById('val-engagement')) document.getElementById('val-engagement').innerText = ratio + "x";
-                if(document.getElementById('profile-bio-text')) document.getElementById('profile-bio-text').innerText = metrics.bio;
-                if(document.getElementById('profile-display-name')) document.getElementById('profile-display-name').innerText = metrics.nickname;
-                
-                if (metrics.avatar) {
-                    if(document.getElementById('profile-avatar-box')) document.getElementById('profile-avatar-box').innerHTML = '<img src="' + metrics.avatar + '" alt="Avatar">';
-                    var pairBox = document.getElementById('trend-pair-avatar');
-                    if(pairBox) pairBox.innerHTML = '<img src="' + metrics.avatar + '" style="width:100%; height:100%; object-fit:cover; border-radius:6px;" />';
-                }
-                if(document.getElementById('stats-signature-desc')) {
-                    document.getElementById('stats-signature-desc').innerText = isNaN(metrics.followers) ? "Awaiting secure stream initialization." : "Active tracking signature confirmed. Account contains exactly " + Number(metrics.followers).toLocaleString() + " followers and " + Number(metrics.likes).toLocaleString() + " raw interaction likes across " + Number(metrics.videos).toLocaleString() + " uploads.";
-                }
-
-                var tier = "Tier 4";
-                var reachStr = "50K";
-                var followerNum = parseInt(metrics.followers) || 0;
-                if (followerNum > 50000000) { tier = "Tier 1"; reachStr = (followerNum * 0.12 / 1000000).toFixed(1) + "M"; }
-                else if (followerNum > 1000000) { tier = "Tier 2"; reachStr = (followerNum * 0.15 / 1000000).toFixed(1) + "M"; }
-                else if (followerNum > 100000) { tier = "Tier 3"; reachStr = (followerNum * 0.2 / 1000).toFixed(0) + "K"; }
-                else { reachStr = (followerNum * 0.4 / 1000).toFixed(0) + "K"; }
-
-                var seed = appState.handle.length;
-                var soundNames = ["Neon Drift", "Quantum Beats", "HyperDrive Sonic", "Cyber-Synth Wave", "Retro Ambient Fluid"];
-                var hashtags = ["#AIGlow", "#CreatorVelocity", "#TechPulse", "#BioScale", "#AlphaInbound"];
-                
-                if(document.getElementById('trend-sound-name')) document.getElementById('trend-sound-name').innerText = soundNames[seed % soundNames.length];
-                if(document.getElementById('trend-hashtag')) document.getElementById('trend-hashtag').innerText = hashtags[(seed + 2) % hashtags.length];
-                if(document.getElementById('trend-sound-lift')) document.getElementById('trend-sound-lift').innerText = "+" + (((seed * 7) % 60) + 15) + "%";
-                
-                var calculatedScore = (85 + (parseFloat(ratio) * 1.5)).toFixed(1);
-                if (calculatedScore > 100) calculatedScore = "99.2";
-                if(document.getElementById('trend-ai-score')) document.getElementById('trend-ai-score').innerText = calculatedScore;
-                
-                if(document.getElementById('trend-tier')) document.getElementById('trend-tier').innerText = tier;
-                if(document.getElementById('trend-reach-val')) document.getElementById('trend-reach-val').innerText = reachStr;
-                if(document.getElementById('trend-pair-names')) document.getElementById('trend-pair-names').innerText = displayHandle + " + @NexusPulse";
-
-                var barsContainer = document.getElementById('trend-chart-bars');
-                if (barsContainer) {
-                    var baseHeights = [35, 60, 90, 55, 40, 80];
-                    var barHtml = "";
-                    baseHeights.forEach(function(h) {
-                        var variableHeight = Math.min(100, Math.max(15, h + (seed % 3 == 0 ? 10 : -10)));
-                        barHtml += '<div style="width: 8%; background: linear-gradient(to top, var(--bg-input), var(--text-gold)); height: ' + variableHeight + '%; border-radius: 4px 4px 0 0;"></div>';
-                    });
-                    barsContainer.innerHTML = barHtml;
-                }
-            }
-        }
-
-        function launchMainDashboardWorkspace() {
-            triggerHapticFeedback();
-            var stepSuccess = document.getElementById('step-success');
-            if(stepSuccess) stepSuccess.classList.remove('active-step');
-            document.getElementById('main-application-suite').style.display = 'block';
-        }
-
-        function switchTab(tabId, tabBtnElement) {
-            triggerHapticFeedback();
-            document.querySelectorAll('.app-view').forEach(function(view) {
-                view.classList.remove('active-view');
-            });
-            document.querySelectorAll('.tab-item').forEach(function(btn) {
-                btn.classList.remove('active');
-            });
-            
-            var targetedView = document.getElementById('view-' + tabId);
-            if(targetedView) targetedView.classList.add('active-view');
-            if(tabBtnElement) tabBtnElement.classList.add('active');
-        }
-
-        function resetAppMemory() {
-            if(confirm("Completely reset local dashboard storage profiles?")) {
-                safeStorage.clear();
-                setTimeout(function() {
-                    window.location.href = window.location.pathname + '?clear=' + Date.now();
-                }, 200);
-            }
-        }
-
-        function triggerHapticFeedback() {
-            try {
-                if (tg && tg.HapticFeedback) {
-                    tg.HapticFeedback.impactOccurred('medium');
-                }
-            } catch(e){}
-        }
-    </script>
+function selectSize(el){
+  document.querySelectorAll('.size-opt').forEach(function(s){s.classList.remove('selected');});
+  el.classList.add('selected');
+}
+</script>
 </body>
 </html>
