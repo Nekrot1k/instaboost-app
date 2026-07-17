@@ -14,6 +14,14 @@
  *   DELETE /api/cart/:id              (auth)
  *   POST   /api/orders                (auth) checkout — creates order from current cart, clears cart
  *   GET    /api/orders                (auth)
+ *   GET    /api/addresses             (auth)
+ *   POST   /api/addresses             (auth) { label, fullName, phone, city, addressLine, postalCode }
+ *   PATCH  /api/addresses/:id         (auth) { setDefault:true } or any subset of the fields above
+ *   DELETE /api/addresses/:id         (auth)
+ *   GET    /api/payment-methods       (auth)
+ *   POST   /api/payment-methods       (auth) { brand, last4, expMonth, expYear, label } — display-only, never a full card number
+ *   PATCH  /api/payment-methods/:id   (auth) { setDefault:true }
+ *   DELETE /api/payment-methods/:id   (auth)
  *
  * Everything else falls through to static assets (env.ASSETS), which serves index.html.
  *
@@ -334,6 +342,126 @@ export default {
           order.items = items;
         }
         return json(orders);
+      }
+
+      // ---- Addresses (auth) ----
+      if (pathname === '/api/addresses' && request.method === 'GET') {
+        const user = await requireUser(request, env);
+        if (!user) return errorResponse('Unauthorized', 401);
+        const { results } = await env.DB.prepare(
+          `SELECT * FROM addresses WHERE user_id = ? ORDER BY is_default DESC, created_at DESC`
+        ).bind(user.id).all();
+        return json(results);
+      }
+
+      if (pathname === '/api/addresses' && request.method === 'POST') {
+        const user = await requireUser(request, env);
+        if (!user) return errorResponse('Unauthorized', 401);
+        const body = await request.json().catch(() => ({}));
+        const { label, fullName, phone, city, addressLine, postalCode } = body;
+        if (!fullName || !phone || !city || !addressLine) {
+          return errorResponse('fullName, phone, city and addressLine are required', 400);
+        }
+        const { results: existing } = await env.DB.prepare(
+          `SELECT id FROM addresses WHERE user_id = ?`
+        ).bind(user.id).all();
+        const isDefault = existing.length === 0 ? 1 : 0;
+
+        const result = await env.DB.prepare(
+          `INSERT INTO addresses (user_id, label, full_name, phone, city, address_line, postal_code, is_default)
+           VALUES (?,?,?,?,?,?,?,?)`
+        ).bind(user.id, label || null, fullName, phone, city, addressLine, postalCode || null, isDefault).run();
+
+        return json({ id: result.meta.last_row_id }, 201);
+      }
+
+      m = pathname.match(/^\/api\/addresses\/(\d+)$/);
+      if (m && request.method === 'PATCH') {
+        const user = await requireUser(request, env);
+        if (!user) return errorResponse('Unauthorized', 401);
+        const body = await request.json().catch(() => ({}));
+
+        if (body.setDefault) {
+          await env.DB.batch([
+            env.DB.prepare(`UPDATE addresses SET is_default = 0 WHERE user_id = ?`).bind(user.id),
+            env.DB.prepare(`UPDATE addresses SET is_default = 1 WHERE id = ? AND user_id = ?`).bind(m[1], user.id),
+          ]);
+          return json({ ok: true });
+        }
+
+        const fields = ['label', 'fullName', 'phone', 'city', 'addressLine', 'postalCode'];
+        const colMap = { label: 'label', fullName: 'full_name', phone: 'phone', city: 'city', addressLine: 'address_line', postalCode: 'postal_code' };
+        const sets = [];
+        const binds = [];
+        for (const f of fields) {
+          if (body[f] !== undefined) { sets.push(`${colMap[f]} = ?`); binds.push(body[f]); }
+        }
+        if (sets.length === 0) return errorResponse('No fields to update', 400);
+        binds.push(m[1], user.id);
+        await env.DB.prepare(`UPDATE addresses SET ${sets.join(', ')} WHERE id = ? AND user_id = ?`).bind(...binds).run();
+        return json({ ok: true });
+      }
+
+      if (m && request.method === 'DELETE') {
+        const user = await requireUser(request, env);
+        if (!user) return errorResponse('Unauthorized', 401);
+        await env.DB.prepare(`DELETE FROM addresses WHERE id = ? AND user_id = ?`).bind(m[1], user.id).run();
+        return json({ ok: true });
+      }
+
+      // ---- Payment methods (auth) ----
+      // Display-only records. This endpoint never accepts a full card number or CVV —
+      // only the non-sensitive brand/last4/expiry a real payment processor (Stripe,
+      // Telegram Payments, etc.) would return after tokenizing a card. Wire an actual
+      // gateway's tokenization flow in before accepting real cards.
+      if (pathname === '/api/payment-methods' && request.method === 'GET') {
+        const user = await requireUser(request, env);
+        if (!user) return errorResponse('Unauthorized', 401);
+        const { results } = await env.DB.prepare(
+          `SELECT * FROM payment_methods WHERE user_id = ? ORDER BY is_default DESC, created_at DESC`
+        ).bind(user.id).all();
+        return json(results);
+      }
+
+      if (pathname === '/api/payment-methods' && request.method === 'POST') {
+        const user = await requireUser(request, env);
+        if (!user) return errorResponse('Unauthorized', 401);
+        const body = await request.json().catch(() => ({}));
+        const { brand, last4, expMonth, expYear, label } = body;
+        if (!brand || !last4 || !/^\d{4}$/.test(String(last4))) {
+          return errorResponse('brand and a 4-digit last4 are required', 400);
+        }
+        const { results: existing } = await env.DB.prepare(
+          `SELECT id FROM payment_methods WHERE user_id = ?`
+        ).bind(user.id).all();
+        const isDefault = existing.length === 0 ? 1 : 0;
+
+        const result = await env.DB.prepare(
+          `INSERT INTO payment_methods (user_id, brand, last4, exp_month, exp_year, label, is_default)
+           VALUES (?,?,?,?,?,?,?)`
+        ).bind(user.id, brand, String(last4), expMonth || null, expYear || null, label || null, isDefault).run();
+
+        return json({ id: result.meta.last_row_id }, 201);
+      }
+
+      m = pathname.match(/^\/api\/payment-methods\/(\d+)$/);
+      if (m && request.method === 'PATCH') {
+        const user = await requireUser(request, env);
+        if (!user) return errorResponse('Unauthorized', 401);
+        const body = await request.json().catch(() => ({}));
+        if (!body.setDefault) return errorResponse('Only setDefault is supported', 400);
+        await env.DB.batch([
+          env.DB.prepare(`UPDATE payment_methods SET is_default = 0 WHERE user_id = ?`).bind(user.id),
+          env.DB.prepare(`UPDATE payment_methods SET is_default = 1 WHERE id = ? AND user_id = ?`).bind(m[1], user.id),
+        ]);
+        return json({ ok: true });
+      }
+
+      if (m && request.method === 'DELETE') {
+        const user = await requireUser(request, env);
+        if (!user) return errorResponse('Unauthorized', 401);
+        await env.DB.prepare(`DELETE FROM payment_methods WHERE id = ? AND user_id = ?`).bind(m[1], user.id).run();
+        return json({ ok: true });
       }
 
       return errorResponse('Not found', 404);

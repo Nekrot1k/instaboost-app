@@ -172,6 +172,39 @@
     display:flex;align-items:center;justify-content:center;padding:0 2px;}
   .icon-btn{position:relative;}
   .empty-state{padding:40px 0;text-align:center;font-size:13px;color:var(--on-surface-variant);}
+
+  .sub-page{padding:20px 16px 8px;}
+  .sub-back{display:flex;align-items:center;gap:10px;margin-bottom:18px;}
+  .sub-back .icon-btn{width:auto;}
+  .sub-back h1{font-size:22px;font-weight:800;text-transform:uppercase;letter-spacing:-0.01em;}
+
+  .order-card{border:1px solid var(--outline-variant);padding:16px;margin-bottom:12px;}
+  .order-card .order-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  .order-card .order-id{font-size:13px;font-weight:700;letter-spacing:0.04em;}
+  .order-card .order-date{font-size:11px;color:var(--outline);}
+  .status-pill{display:inline-block;font-size:9px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;
+    border:1px solid var(--outline-variant);padding:4px 9px;}
+  .status-pill.paid,.status-pill.completed{border-color:var(--primary);color:var(--primary);}
+  .order-items{border-top:1px solid var(--outline-variant);margin-top:10px;padding-top:10px;}
+  .order-item-row{display:flex;justify-content:space-between;font-size:12px;color:var(--on-surface-variant);padding:4px 0;}
+  .order-total-row{display:flex;justify-content:space-between;font-size:14px;font-weight:700;margin-top:10px;padding-top:10px;border-top:1px solid var(--outline-variant);}
+
+  .info-card{border:1px solid var(--outline-variant);padding:16px;margin-bottom:12px;position:relative;}
+  .info-card .ic-label{font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--outline);margin-bottom:6px;}
+  .info-card .ic-main{font-size:14px;font-weight:600;margin-bottom:2px;}
+  .info-card .ic-sub{font-size:12px;color:var(--on-surface-variant);}
+  .default-badge{position:absolute;top:14px;right:14px;font-size:9px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--primary);}
+  .ic-actions{display:flex;gap:16px;margin-top:12px;padding-top:12px;border-top:1px solid var(--outline-variant);}
+  .ic-actions span{font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;text-decoration:underline;text-underline-offset:3px;color:var(--on-surface-variant);}
+
+  .form-field{margin-bottom:16px;}
+  .form-field label{display:block;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--outline);margin-bottom:8px;}
+  .form-field input,.form-field select{width:100%;background:none;border:none;border-bottom:1px solid var(--outline-variant);
+    color:var(--primary);font-size:15px;padding:8px 0;outline:none;}
+  .form-field input:focus,.form-field select:focus{border-bottom:2px solid var(--primary);}
+  .form-field select{-webkit-appearance:none;appearance:none;}
+  .form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .form-note{font-size:11px;color:var(--outline);line-height:1.5;margin:-4px 0 20px;}
 </style>
 </head>
 <body>
@@ -294,14 +327,89 @@
     <div class="status-icon">★</div>
   </div>
   <div class="menu-list">
-    <div class="menu-item"><span class="mi-icon">📦</span><span>Мої замовлення</span><span class="arrow">›</span></div>
-    <div class="menu-item"><span class="mi-icon">📍</span><span>Адреси доставки</span><span class="arrow">›</span></div>
-    <div class="menu-item"><span class="mi-icon">💳</span><span>Способи оплати</span><span class="arrow">›</span></div>
+    <div class="menu-item" onclick="openSubPage('orders')" style="cursor:pointer;"><span class="mi-icon">📦</span><span>Мої замовлення</span><span class="arrow">›</span></div>
+    <div class="menu-item" onclick="openSubPage('addresses')" style="cursor:pointer;"><span class="mi-icon">📍</span><span>Адреси доставки</span><span class="arrow">›</span></div>
+    <div class="menu-item" onclick="openSubPage('payment')" style="cursor:pointer;"><span class="mi-icon">💳</span><span>Способи оплати</span><span class="arrow">›</span></div>
     <div class="menu-item"><span class="mi-icon">⚙</span><span>Налаштування</span><span class="arrow">›</span></div>
     <div class="menu-item"><span class="mi-icon">🎧</span><span>Підтримка</span><span class="arrow">›</span></div>
   </div>
   <button class="logout-btn">⎋ Вийти</button>
   <div class="version-txt">Version 1.0.4 — © Grand Editorial</div>
+</div>
+
+<!-- Orders -->
+<div class="app-view" id="view-orders">
+  <div class="sub-page">
+    <div class="sub-back">
+      <button class="icon-btn" onclick="switchTab('profile', document.querySelector('.tab-item[data-tab=profile]'))">←</button>
+      <h1>Мої замовлення</h1>
+    </div>
+    <div id="orders-list"></div>
+  </div>
+</div>
+
+<!-- Addresses -->
+<div class="app-view" id="view-addresses">
+  <div class="sub-page">
+    <div class="sub-back">
+      <button class="icon-btn" onclick="switchTab('profile', document.querySelector('.tab-item[data-tab=profile]'))">←</button>
+      <h1>Адреси доставки</h1>
+    </div>
+    <div id="addresses-list"></div>
+    <button class="btn-outline" onclick="openAddressForm()">+ Додати адресу</button>
+  </div>
+</div>
+
+<div class="app-view" id="view-address-form">
+  <div class="sub-page">
+    <div class="sub-back">
+      <button class="icon-btn" onclick="openSubPage('addresses')">←</button>
+      <h1>Нова адреса</h1>
+    </div>
+    <div class="form-field"><label>Назва (необовʼязково)</label><input type="text" id="addr-label" placeholder="Дім, Офіс..."></div>
+    <div class="form-field"><label>Повне імʼя</label><input type="text" id="addr-fullname"></div>
+    <div class="form-field"><label>Телефон</label><input type="tel" id="addr-phone" placeholder="+380"></div>
+    <div class="form-field"><label>Місто</label><input type="text" id="addr-city"></div>
+    <div class="form-field"><label>Адреса (вулиця, будинок, квартира)</label><input type="text" id="addr-line"></div>
+    <div class="form-field"><label>Поштовий індекс</label><input type="text" id="addr-postal"></div>
+    <button class="btn-solid" onclick="submitAddressForm()">Зберегти адресу</button>
+  </div>
+</div>
+
+<!-- Payment methods -->
+<div class="app-view" id="view-payment">
+  <div class="sub-page">
+    <div class="sub-back">
+      <button class="icon-btn" onclick="switchTab('profile', document.querySelector('.tab-item[data-tab=profile]'))">←</button>
+      <h1>Способи оплати</h1>
+    </div>
+    <div id="payment-list"></div>
+    <button class="btn-outline" onclick="openPaymentForm()">+ Додати картку</button>
+  </div>
+</div>
+
+<div class="app-view" id="view-payment-form">
+  <div class="sub-page">
+    <div class="sub-back">
+      <button class="icon-btn" onclick="openSubPage('payment')">←</button>
+      <h1>Нова картка</h1>
+    </div>
+    <div class="form-note">Заради безпеки ми не зберігаємо повний номер картки — лише дані, які повертає платіжний провайдер після токенізації.</div>
+    <div class="form-field">
+      <label>Платіжна система</label>
+      <select id="pm-brand">
+        <option value="Visa">Visa</option>
+        <option value="Mastercard">Mastercard</option>
+      </select>
+    </div>
+    <div class="form-field"><label>Останні 4 цифри</label><input type="text" id="pm-last4" maxlength="4" inputmode="numeric" placeholder="1234"></div>
+    <div class="form-row-2">
+      <div class="form-field"><label>Місяць</label><input type="text" id="pm-exp-month" maxlength="2" inputmode="numeric" placeholder="MM"></div>
+      <div class="form-field"><label>Рік</label><input type="text" id="pm-exp-year" maxlength="4" inputmode="numeric" placeholder="YYYY"></div>
+    </div>
+    <div class="form-field"><label>Назва (необовʼязково)</label><input type="text" id="pm-label" placeholder="Особиста картка"></div>
+    <button class="btn-solid" onclick="submitPaymentForm()">Зберегти картку</button>
+  </div>
 </div>
 
 <div class="app-view" id="view-product">
@@ -620,6 +728,175 @@ function loadMe(){
   }).catch(function(){
     ME = null; FAVORITE_SLUGS = [];
   });
+}
+
+// ---- Profile sub-pages: orders / addresses / payment methods ------------
+function openSubPage(which){
+  document.querySelectorAll('.app-view').forEach(function(v){v.classList.remove('active-view');});
+  document.getElementById('view-'+which).classList.add('active-view');
+  document.querySelectorAll('.tab-item').forEach(function(b){b.classList.remove('active');});
+  document.getElementById('bottom-nav').style.display = 'none';
+  document.getElementById('main-header').style.display = 'none';
+  window.scrollTo(0,0);
+  if(which==='orders') loadOrders();
+  if(which==='addresses') loadAddresses();
+  if(which==='payment') loadPaymentMethods();
+}
+
+function fmtDate(iso){
+  try {
+    var d = new Date(iso.replace(' ','T')+'Z');
+    return d.toLocaleDateString('uk-UA', {day:'numeric', month:'long', year:'numeric'});
+  } catch(e){ return iso; }
+}
+
+var STATUS_LABELS = {pending:'Очікує', paid:'Оплачено', shipped:'Відправлено', completed:'Виконано', cancelled:'Скасовано'};
+
+// -- Orders --
+function loadOrders(){
+  var el = document.getElementById('orders-list');
+  el.innerHTML = '<div class="empty-state">Завантаження…</div>';
+  api('/api/orders').then(function(orders){
+    if(!orders.length){ el.innerHTML = '<div class="empty-state">У вас ще немає замовлень.</div>'; return; }
+    el.innerHTML = orders.map(function(o){
+      var itemsHTML = o.items.map(function(it){
+        return '<div class="order-item-row"><span>'+it.product_name+(it.size?' · '+it.size:'')+' × '+it.qty+'</span><span>'+formatPrice(it.price_cents*it.qty, o.currency)+'</span></div>';
+      }).join('');
+      return '<div class="order-card">'+
+        '<div class="order-row"><span class="order-id">Замовлення #'+o.id+'</span><span class="status-pill '+o.status+'">'+(STATUS_LABELS[o.status]||o.status)+'</span></div>'+
+        '<div class="order-date">'+fmtDate(o.created_at)+'</div>'+
+        '<div class="order-items">'+itemsHTML+'</div>'+
+        '<div class="order-total-row"><span>Разом</span><span>'+formatPrice(o.total_cents, o.currency)+'</span></div>'+
+      '</div>';
+    }).join('');
+  }).catch(function(err){
+    el.innerHTML = '<div class="empty-state">Не вдалося завантажити замовлення: '+err.message+'</div>';
+  });
+}
+
+// -- Addresses --
+function loadAddresses(){
+  var el = document.getElementById('addresses-list');
+  el.innerHTML = '<div class="empty-state">Завантаження…</div>';
+  api('/api/addresses').then(function(list){
+    if(!list.length){ el.innerHTML = '<div class="empty-state">Ще немає збережених адрес.</div>'; return; }
+    el.innerHTML = list.map(function(a){
+      return '<div class="info-card">'+
+        (a.is_default?'<div class="default-badge">За замовчуванням</div>':'')+
+        '<div class="ic-label">'+(a.label||'Адреса')+'</div>'+
+        '<div class="ic-main">'+a.full_name+'</div>'+
+        '<div class="ic-sub">'+a.address_line+', '+a.city+(a.postal_code?', '+a.postal_code:'')+'</div>'+
+        '<div class="ic-sub">'+a.phone+'</div>'+
+        '<div class="ic-actions">'+
+          (a.is_default?'':'<span onclick="setDefaultAddress('+a.id+')">Зробити основною</span>')+
+          '<span onclick="deleteAddress('+a.id+')">Видалити</span>'+
+        '</div>'+
+      '</div>';
+    }).join('');
+  }).catch(function(err){
+    el.innerHTML = '<div class="empty-state">Не вдалося завантажити адреси: '+err.message+'</div>';
+  });
+}
+
+function openAddressForm(){
+  ['addr-label','addr-fullname','addr-phone','addr-city','addr-line','addr-postal'].forEach(function(id){
+    document.getElementById(id).value = '';
+  });
+  openSubPage('address-form');
+}
+
+function submitAddressForm(){
+  var body = {
+    label: document.getElementById('addr-label').value.trim() || null,
+    fullName: document.getElementById('addr-fullname').value.trim(),
+    phone: document.getElementById('addr-phone').value.trim(),
+    city: document.getElementById('addr-city').value.trim(),
+    addressLine: document.getElementById('addr-line').value.trim(),
+    postalCode: document.getElementById('addr-postal').value.trim() || null
+  };
+  if(!body.fullName || !body.phone || !body.city || !body.addressLine){
+    alert('Заповніть імʼя, телефон, місто та адресу.'); return;
+  }
+  api('/api/addresses', {method:'POST', body: JSON.stringify(body)})
+    .then(function(){ openSubPage('addresses'); })
+    .catch(function(err){ alert('Не вдалося зберегти адресу: '+err.message); });
+}
+
+function setDefaultAddress(id){
+  api('/api/addresses/'+id, {method:'PATCH', body: JSON.stringify({setDefault:true})})
+    .then(loadAddresses)
+    .catch(function(err){ alert('Не вдалося оновити адресу: '+err.message); });
+}
+
+function deleteAddress(id){
+  if(!confirm('Видалити цю адресу?')) return;
+  api('/api/addresses/'+id, {method:'DELETE'})
+    .then(loadAddresses)
+    .catch(function(err){ alert('Не вдалося видалити адресу: '+err.message); });
+}
+
+// -- Payment methods --
+function maskCardBrandIcon(brand){
+  return brand === 'Mastercard' ? '◐◑' : '▭';
+}
+
+function loadPaymentMethods(){
+  var el = document.getElementById('payment-list');
+  el.innerHTML = '<div class="empty-state">Завантаження…</div>';
+  api('/api/payment-methods').then(function(list){
+    if(!list.length){ el.innerHTML = '<div class="empty-state">Ще немає збережених карток.</div>'; return; }
+    el.innerHTML = list.map(function(pm){
+      var exp = pm.exp_month && pm.exp_year ? String(pm.exp_month).padStart(2,'0')+'/'+String(pm.exp_year).slice(-2) : '';
+      return '<div class="info-card">'+
+        (pm.is_default?'<div class="default-badge">За замовчуванням</div>':'')+
+        '<div class="ic-label">'+pm.brand+'</div>'+
+        '<div class="ic-main">•••• •••• •••• '+pm.last4+'</div>'+
+        '<div class="ic-sub">'+(pm.label?pm.label+' · ':'')+exp+'</div>'+
+        '<div class="ic-actions">'+
+          (pm.is_default?'':'<span onclick="setDefaultPayment('+pm.id+')">Зробити основною</span>')+
+          '<span onclick="deletePayment('+pm.id+')">Видалити</span>'+
+        '</div>'+
+      '</div>';
+    }).join('');
+  }).catch(function(err){
+    el.innerHTML = '<div class="empty-state">Не вдалося завантажити картки: '+err.message+'</div>';
+  });
+}
+
+function openPaymentForm(){
+  ['pm-last4','pm-exp-month','pm-exp-year','pm-label'].forEach(function(id){
+    document.getElementById(id).value = '';
+  });
+  openSubPage('payment-form');
+}
+
+function submitPaymentForm(){
+  var body = {
+    brand: document.getElementById('pm-brand').value,
+    last4: document.getElementById('pm-last4').value.trim(),
+    expMonth: parseInt(document.getElementById('pm-exp-month').value, 10) || null,
+    expYear: parseInt(document.getElementById('pm-exp-year').value, 10) || null,
+    label: document.getElementById('pm-label').value.trim() || null
+  };
+  if(!/^\d{4}$/.test(body.last4)){
+    alert('Введіть останні 4 цифри картки.'); return;
+  }
+  api('/api/payment-methods', {method:'POST', body: JSON.stringify(body)})
+    .then(function(){ openSubPage('payment'); })
+    .catch(function(err){ alert('Не вдалося зберегти картку: '+err.message); });
+}
+
+function setDefaultPayment(id){
+  api('/api/payment-methods/'+id, {method:'PATCH', body: JSON.stringify({setDefault:true})})
+    .then(loadPaymentMethods)
+    .catch(function(err){ alert('Не вдалося оновити картку: '+err.message); });
+}
+
+function deletePayment(id){
+  if(!confirm('Видалити цю картку?')) return;
+  api('/api/payment-methods/'+id, {method:'DELETE'})
+    .then(loadPaymentMethods)
+    .catch(function(err){ alert('Не вдалося видалити картку: '+err.message); });
 }
 
 Promise.all([loadProducts().then(loadCategoryTagging), loadMe()])
